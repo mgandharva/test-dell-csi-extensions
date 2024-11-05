@@ -112,7 +112,7 @@ jobs:
             console.log('PR merged!');
 
       - name: Create new tags for other modules
-        if: steps.update_dependencies_and_create_pr.outputs.changes_made == 'false'
+        # if: steps.update_dependencies_and_create_pr.outputs.changes_made == 'false'
         run: |
           modules=("volumeGroupSnapshot" "replication" "migration" "podmon")
           for module in "${modules[@]}"; do
