@@ -36,8 +36,9 @@ jobs:
           IFS='/' read -r _ version <<< "$latest_release_tag"
           IFS='.' read -r major minor patch <<< "$version"
           new_minor=$((minor + 1))
-          new_common_tag="common/v$major.$new_minor.0"
+          new_common_tag="common/$major.$new_minor.0"
           echo "New common tag: $new_common_tag"
+          echo "new_common_tag=$new_common_tag" >> $GITHUB_ENV
           git tag -a $new_common_tag -m "common $new_common_tag"
           git push origin $new_common_tag
         env:
@@ -50,7 +51,7 @@ jobs:
           IFS='/' read -r _ version <<< "$latest_release_tag"
           IFS='.' read -r major minor patch <<< "$version"
           new_minor=$((minor + 1))
-          new_release_branch="release/$major.$new_minor.0"
+          new_release_branch="release-$major.$new_minor.0"
           echo "New release branch: $new_release_branch"
           git checkout -b $new_release_branch
           git push origin $new_release_branch
@@ -60,9 +61,9 @@ jobs:
       - name: Create GitHub release
         uses: actions/create-release@v1
         with:
-          tag_name: common/v${{ env.release_tag }}
-          release_name: "Release ${{ env.release_tag }}"
-          body: "Release notes for ${{ env.release_tag }}"
+          tag_name: ${{ env.new_common_tag }}
+          release_name: "${{ env.new_common_tag }}"
+          body: "Release notes for ${{ env.new_common_tag }}"
           draft: false
           prerelease: false
         env:
