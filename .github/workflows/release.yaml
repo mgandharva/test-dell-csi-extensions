@@ -70,18 +70,18 @@ jobs:
         with:
           tag_name: ${{ env.common_new_tag }}
           release_name: |
-            volumeGroupSnapshot ${{ env.volumeGroupSnapshot_new_tag }}, \
-            Replication ${{ env.replication_new_tag }}, \
-            Migration ${{ env.migration_new_tag }}, \
-            Common ${{ env.common_new_tag }}, \
-            Podmon ${{ env.podmon_new_tag }}
+            volumeGroupSnapshot v${{ env.volumeGroupSnapshot_new_tag#*/ }}, \
+            Replication v${{ env.replication_new_tag#*/ }}, \
+            Migration v${{ env.migration_new_tag#*/ }}, \
+            Common v${{ env.common_new_tag#*/ }}, \
+            Podmon v${{ env.podmon_new_tag#*/ }}
           body: |
             ## Release Notes
-            - **Common**: ${{ env.common_new_tag }}
-            - **VolumeGroupSnapshot**: ${{ env.volumeGroupSnapshot_new_tag }}
-            - **Replication**: ${{ env.replication_new_tag }}
-            - **Migration**: ${{ env.migration_new_tag }}
-            - **Podmon**: ${{ env.podmon_new_tag }}
+            - **Common**: v${{ env.common_new_tag#*/ }}
+            - **VolumeGroupSnapshot**: v${{ env.volumeGroupSnapshot_new_tag#*/ }}
+            - **Replication**: v${{ env.replication_new_tag#*/ }}
+            - **Migration**: v${{ env.migration_new_tag#*/ }}
+            - **Podmon**: v${{ env.podmon_new_tag#*/ }}
           draft: false
           prerelease: false
         env:
