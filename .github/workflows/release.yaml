@@ -63,7 +63,7 @@ jobs:
           for module in "${modules[@]}"; do
             echo "Updating dependencies for $module"
             cd $module
-            go get github.com/dell/dell-csi-extensions/common@$common_version
+            go get github.com/dell/dell-csi-extensions/common@1.6.0
             go mod tidy
             cd ..
             git add $module/go.mod $module/go.sum
