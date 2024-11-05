@@ -10,7 +10,7 @@ on:
         required: true
         default: 'none'
 jobs:
-  create-tag:
+  create-common-tag:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -21,17 +21,23 @@ jobs:
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
 
-      - name: Get latest tag
-        id: get_latest_tag
-        run: echo ::set-output name=tag::$(git describe --tags `git rev-list --tags --max-count=1`)
-
-      - name: Create new tag
-        id: create_tag
+      - name: Get latest release tag
+        id: get_latest_release_tag
         run: |
-          latest_tag=${{ steps.get_latest_tag.outputs.tag }}
-          new_tag=$(echo $latest_tag | awk -F. -v OFS=. '{$NF += 1 ; print}')
-          git tag -a common/$new_tag -s -m "common $new_tag"
-          git push origin common/$new_tag
+          latest_release_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "Latest release tag: $latest_release_tag"
+          echo "release_tag=$latest_release_tag" >> $GITHUB_ENV
+
+      - name: Create new common tag
+        id: create_common_tag
+        run: |
+          latest_release_tag=${{ env.release_tag }}
+          new_common_tag=$(echo $latest_release_tag | awk -F. -v OFS=. '{$NF += 1 ; print}')
+          echo "New common tag: $new_common_tag"
+          git tag -a common/$new_common_tag -s -m "common $new_common_tag"
+          git push origin common/$new_common_tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # create-pr:
   #   runs-on: ubuntu-latest
