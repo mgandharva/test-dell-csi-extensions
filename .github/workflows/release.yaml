@@ -10,7 +10,7 @@ on:
         required: true
         default: 'none'
 jobs:
-  create-common-tag:
+  release-common:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -44,6 +44,29 @@ jobs:
           echo "New common tag: $new_common_tag"
           git tag -a common/$new_common_tag -m "common $new_common_tag"
           git push origin common/$new_common_tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release branch
+        run: |
+          latest_release_tag=${{ env.release_tag }}
+          IFS='/' read -r _ version <<< "$latest_release_tag"
+          IFS='.' read -r major minor patch <<< "$version"
+          new_minor=$((minor + 1))
+          new_release_branch="release/$major.$new_minor.0"
+          git checkout -b $new_release_branch
+          git push origin $new_release_branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub release
+        uses: actions/create-release@v1
+        with:
+          tag_name: common/${{ env.release_tag }}
+          release_name: "Release ${{ env.release_tag }}"
+          body: "Release notes for ${{ env.release_tag }}"
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
