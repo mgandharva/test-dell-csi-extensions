@@ -15,11 +15,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Fetch all history for all tags
 
       - name: Set up Git
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
+
+      - name: Fetch all tags
+        run: git fetch --tags
 
       - name: Get latest release tag
         id: get_latest_release_tag
@@ -38,6 +43,7 @@ jobs:
           git push origin common/$new_common_tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
   # create-pr:
   #   runs-on: ubuntu-latest
