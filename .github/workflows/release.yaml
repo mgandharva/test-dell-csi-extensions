@@ -24,7 +24,7 @@ jobs:
       - name: Get latest release tags for all modules
         id: get_latest_release_tags
         run: |
-          modules=("common" "volumeGroupSnapshot" "replication" "migration" "podmon")
+          modules=("volumeGroupSnapshot" "replication" "migration" "common" "podmon")
           for module in "${modules[@]}"; do
             latest_release_tag=$(git tag -l "$module/*" | sort -V | tail -n 1)
             echo "Latest release tag for $module: $latest_release_tag"
@@ -36,7 +36,7 @@ jobs:
       - name: Create new tags for all modules
         id: create_tags
         run: |
-          modules=("common" "volumeGroupSnapshot" "replication" "migration" "podmon")
+          modules=("volumeGroupSnapshot" "replication" "migration" "common" "podmon")
           for module in "${modules[@]}"; do
             latest_release_tag=$(eval echo \${${module}_release_tag})
             IFS='/' read -r _ version <<< "$latest_release_tag"
@@ -53,7 +53,7 @@ jobs:
 
       - name: Create release branches for all modules
         run: |
-          modules=("common" "volumeGroupSnapshot" "replication" "migration" "podmon")
+          modules=("volumeGroupSnapshot" "replication" "migration" "common" "podmon")
           for module in "${modules[@]}"; do
             latest_release_tag=$(eval echo \${${module}_release_tag})
             IFS='/' read -r _ version <<< "$latest_release_tag"
@@ -79,10 +79,10 @@ jobs:
             Podmon ${{ env.podmon_version }}
           body: |
             ## Release Notes
-            - **Common**: ${{ env.common_version }}
             - **VolumeGroupSnapshot**: ${{ env.volumeGroupSnapshot_version }}
             - **Replication**: ${{ env.replication_version }}
             - **Migration**: ${{ env.migration_version }}
+            - **Common**: ${{ env.common_version }}
             - **Podmon**: ${{ env.podmon_version }}
           draft: false
           prerelease: false
