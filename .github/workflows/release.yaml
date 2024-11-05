@@ -45,6 +45,8 @@ jobs:
             new_tag="$module/$major.$new_minor.0"
             echo "Creating new tag for $module: $new_tag"
             echo "${module}_new_tag=$new_tag" >> $GITHUB_ENV
+            new_version="$major.$new_minor.0"
+            echo "${module}_new_version=$new_version" >> $GITHUB_ENV
             git tag -a $new_tag -m "$module $new_tag"
             git push origin $new_tag
           done  # <-- Added this line to close the for loop
@@ -70,20 +72,20 @@ jobs:
       - name: Create GitHub release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ env.volumeGroupSnapshot_new_tag }}
+          tag_name: ${{ env.volumeGroupSnapshot_new_tag }}  # Use the volumeGroupSnapshot tag
           release_name: |
-            volumeGroupSnapshot ${{ env.volumeGroupSnapshot_version }}, 
-            Replication ${{ env.replication_version }}, 
-            Migration ${{ env.migration_version }},  
-            Common ${{ env.common_version }}, 
-            Podmon ${{ env.podmon_version }}
+            volumeGroupSnapshot ${{ env.volumeGroupSnapshot_new_version }},
+            Replication ${{ env.replication_new_version }}, 
+            Migration ${{ env.migration_new_version }},
+            Common ${{ env.common_new_version }}, 
+            Podmon ${{ env.podmon_new_version }}
           body: |
             ## Release Notes
-            - **VolumeGroupSnapshot**: ${{ env.volumeGroupSnapshot_version }}
-            - **Replication**: ${{ env.replication_version }}
-            - **Migration**: ${{ env.migration_version }}
-            - **Common**: ${{ env.common_version }}
-            - **Podmon**: ${{ env.podmon_version }}
+            - **VolumeGroupSnapshot**: ${{ env.volumeGroupSnapshot_new_version }}
+            - **Replication**: ${{ env.replication_new_version }}
+            - **Migration**: ${{ env.migration_new_version }}
+            - **Common**: ${{ env.common_new_version }}
+            - **Podmon**: ${{ env.podmon_new_version }}
           draft: false
           prerelease: false
         env:
