@@ -35,7 +35,7 @@ jobs:
         run: |
           modules=("common" "volumeGroupSnapshot" "replication" "migration" "podmon")
           for module in "${modules[@]}"; do
-            latest_release_tag=${{ env.${module}_release_tag }}
+            latest_release_tag=$(eval echo \${${module}_release_tag})
             IFS='/' read -r _ version <<< "$latest_release_tag"
             IFS='.' read -r major minor patch <<< "$version"
             new_minor=$((minor + 1))
@@ -52,7 +52,7 @@ jobs:
         run: |
           modules=("common" "volumeGroupSnapshot" "replication" "migration" "podmon")
           for module in "${modules[@]}"; do
-            latest_release_tag=${{ env.${module}_release_tag }}
+            latest_release_tag=$(eval echo \${${module}_release_tag})
             IFS='/' read -r _ version <<< "$latest_release_tag"
             IFS='.' read -r major minor patch <<< "$version"
             new_minor=$((minor + 1))
