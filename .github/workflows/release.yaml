@@ -65,18 +65,18 @@ jobs:
         with:
           tag_name: ${{ env.volumeGroupSnapshot_new_tag }}  # Use the volumeGroupSnapshot tag
           release_name: |
-            volumeGroupSnapshot v${{ env.volumeGroupSnapshot_new_version }},
-            Replication v${{ env.replication_new_version }}, 
-            Migration v${{ env.migration_new_version }},
-            Common v${{ env.common_new_version }}, 
-            Podmon v${{ env.podmon_new_version }}
+            volumeGroupSnapshot ${{ env.volumeGroupSnapshot_new_version }},
+            Replication ${{ env.replication_new_version }}, 
+            Migration ${{ env.migration_new_version }},
+            Common ${{ env.common_new_version }}, 
+            Podmon ${{ env.podmon_new_version }}
           body: |
             ## Release Notes
-            - **VolumeGroupSnapshot**: v${{ env.volumeGroupSnapshot_new_version }}
-            - **Replication**: v${{ env.replication_new_version }}
-            - **Migration**: v${{ env.migration_new_version }}
-            - **Common**: v${{ env.common_new_version }}
-            - **Podmon**: v${{ env.podmon_new_version }}
+            - **VolumeGroupSnapshot**: ${{ env.volumeGroupSnapshot_new_version }}
+            - **Replication**: ${{ env.replication_new_version }}
+            - **Migration**: ${{ env.migration_new_version }}
+            - **Common**: ${{ env.common_new_version }}
+            - **Podmon**: ${{ env.podmon_new_version }}
           draft: false
           prerelease: false
         env:
