@@ -37,9 +37,12 @@ jobs:
         id: create_common_tag
         run: |
           latest_release_tag=${{ env.release_tag }}
-          new_common_tag=$(echo $latest_release_tag | awk -F. -v OFS=. '{$NF += 1 ; print}')
+          IFS='/' read -r _ version <<< "$latest_release_tag"
+          IFS='.' read -r major minor patch <<< "$version"
+          new_minor=$((minor + 1))
+          new_common_tag="$major.$new_minor.0"
           echo "New common tag: $new_common_tag"
-          git tag -a common/$new_common_tag -s -m "common $new_common_tag"
+          git tag -a common/$new_common_tag -m "common $new_common_tag"
           git push origin common/$new_common_tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
