@@ -4,11 +4,6 @@ name: Release dell csi extensions
 on:
   workflow_call: 
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to release (major, minor, patch)'
-        required: true
-        default: 'none'
 jobs:
   release-common:
     runs-on: ubuntu-latest
