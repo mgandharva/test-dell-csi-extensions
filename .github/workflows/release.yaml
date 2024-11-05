@@ -29,6 +29,7 @@ jobs:
             latest_release_tag=$(git tag -l "$module/*" | sort -V | tail -n 1)
             echo "Latest release tag for $module: $latest_release_tag"
             echo "${module}_release_tag=$latest_release_tag" >> $GITHUB_ENV
+          done  # <-- Added this line to close the for loop
 
       - name: Create new tags for all modules
         id: create_tags
@@ -44,7 +45,7 @@ jobs:
             echo "${module}_new_tag=$new_tag" >> $GITHUB_ENV
             git tag -a $new_tag -m "$module $new_tag"
             git push origin $new_tag
-          done
+          done  # <-- Added this line to close the for loop
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -60,7 +61,7 @@ jobs:
             echo "Creating release branch for $module: $new_release_branch"
             git checkout -b $new_release_branch
             git push origin $new_release_branch
-          done
+          done  # <-- Added this line to close the for loop
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
