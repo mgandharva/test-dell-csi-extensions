@@ -1,4 +1,4 @@
-name: Release dell csi extensions
+name: Release dell csi extensions optimized
 # Invocable as a reusable workflow
 # Can be manually triggered
 on:
