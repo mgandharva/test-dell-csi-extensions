@@ -72,18 +72,18 @@ jobs:
         with:
           tag_name: ${{ env.common_new_tag }}
           release_name: |
-            volumeGroupSnapshot v${{ env.volumeGroupSnapshot_version }}, \
-            Replication v${{ env.replication_version }}, \
-            Migration v${{ env.migration_version }}, \
-            Common v${{ env.common_version }}, \
-            Podmon v${{ env.podmon_version }}
+            volumeGroupSnapshot ${{ env.volumeGroupSnapshot_version }}, 
+            Replication ${{ env.replication_version }}, 
+            Migration ${{ env.migration_version }},  
+            Common ${{ env.common_version }}, 
+            Podmon ${{ env.podmon_version }}
           body: |
             ## Release Notes
-            - **Common**: v${{ env.common_version }}
-            - **VolumeGroupSnapshot**: v${{ env.volumeGroupSnapshot_version }}
-            - **Replication**: v${{ env.replication_version }}
-            - **Migration**: v${{ env.migration_version }}
-            - **Podmon**: v${{ env.podmon_version }}
+            - **Common**: ${{ env.common_version }}
+            - **VolumeGroupSnapshot**: ${{ env.volumeGroupSnapshot_version }}
+            - **Replication**: ${{ env.replication_version }}
+            - **Migration**: ${{ env.migration_version }}
+            - **Podmon**: ${{ env.podmon_version }}
           draft: false
           prerelease: false
         env:
