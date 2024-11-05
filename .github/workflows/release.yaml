@@ -24,7 +24,7 @@ jobs:
       - name: Get latest release tags for all modules
         id: get_latest_release_tags
         run: |
-          modules=("volumeGroupSnapshot" "replication" "migration" "common" "podmon")
+          modules=("common" "volumeGroupSnapshot" "replication" "migration" "podmon")
           for module in "${modules[@]}"; do
             latest_release_tag=$(git tag -l "$module/*" | sort -V | tail -n 1)
             echo "Latest release tag for $module: $latest_release_tag"
@@ -33,10 +33,78 @@ jobs:
             echo "${module}_version=$version" >> $GITHUB_ENV
           done
 
-      - name: Create new tags and branches for all modules
-        id: create_tags_and_branches
+      - name: Create new tag for common module
+        id: create_common_tag
         run: |
-          modules=("volumeGroupSnapshot" "replication" "migration" "common" "podmon")
+          module="common"
+          latest_release_tag=$(eval echo \${${module}_release_tag})
+          IFS='/' read -r _ version <<< "$latest_release_tag"
+          IFS='.' read -r major minor patch <<< "$version"
+          new_minor=$((minor + 1))
+          new_tag="$module/$major.$new_minor.0"
+          new_version="$major.$new_minor.0"
+          
+          echo "Creating new tag for $module: $new_tag"
+          echo "${module}_new_tag=$new_tag" >> $GITHUB_ENV
+          echo "${module}_new_version=$new_version" >> $GITHUB_ENV
+          
+          git tag -a $new_tag -m "$module $new_tag"
+          git push origin $new_tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update dependencies and create PR for other modules
+        id: update_dependencies_and_create_pr
+        run: |
+          modules=("volumeGroupSnapshot" "replication" "migration")
+          common_version=$(eval echo \${common_new_version})
+          branch_name="update-common-dependency"
+          git checkout -b $branch_name
+          for module in "${modules[@]}"; do
+            echo "Updating dependencies for $module"
+            cd $module
+            go get github.com/dell/dell-csi-extensions/common@$common_version
+            go mod tidy
+            cd ..
+            git add $module/go.mod $module/go.sum
+          done
+          git commit -m "Update common dependency to v$common_version"
+          git push origin $branch_name
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: update-common-dependency
+          title: "Update common dependency to v${{ env.common_new_version }}"
+          body: "This PR updates the common dependency to v${{ env.common_new_version }}."
+
+      - name: Wait for PR to be merged
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = await github.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
+            while (pr.data.state !== 'closed' || !pr.data.merged) {
+              console.log('Waiting for PR to be merged...');
+              await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for 1 minute
+              pr = await github.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number
+              });
+            }
+            console.log('PR merged!');
+
+      - name: Create new tags for other modules
+        id: create_tags
+        run: |
+          modules=("volumeGroupSnapshot" "replication" "migration" "podmon")
           for module in "${modules[@]}"; do
             latest_release_tag=$(eval echo \${${module}_release_tag})
             IFS='/' read -r _ version <<< "$latest_release_tag"
@@ -44,7 +112,6 @@ jobs:
             new_minor=$((minor + 1))
             new_tag="$module/$major.$new_minor.0"
             new_version="$major.$new_minor.0"
-            new_release_branch="release-$module-$new_version"
             
             echo "Creating new tag for $module: $new_tag"
             echo "${module}_new_tag=$new_tag" >> $GITHUB_ENV
@@ -52,10 +119,6 @@ jobs:
             
             git tag -a $new_tag -m "$module $new_tag"
             git push origin $new_tag
-            
-            echo "Creating release branch for $module: $new_release_branch"
-            git checkout -b $new_release_branch
-            git push origin $new_release_branch
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
