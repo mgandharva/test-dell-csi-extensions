@@ -5,7 +5,7 @@ on:
   workflow_call: 
   workflow_dispatch:
 jobs:
-  release-common:
+  release-modules:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -21,49 +21,66 @@ jobs:
       - name: Fetch all tags
         run: git fetch --tags
 
-      - name: Get latest release tag
-        id: get_latest_release_tag
+      - name: Get latest release tags for all modules
+        id: get_latest_release_tags
         run: |
-          latest_release_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-          echo "Latest release tag: $latest_release_tag"
-          echo "release_tag=$latest_release_tag" >> $GITHUB_ENV
+          modules=("common" "volumeGroupSnapshot" "replication" "migration" "podmon")
+          for module in "${modules[@]}"; do
+            latest_release_tag=$(git tag -l "$module/*" | sort -V | tail -n 1)
+            echo "Latest release tag for $module: $latest_release_tag"
+            echo "${module}_release_tag=$latest_release_tag" >> $GITHUB_ENV
 
-      - name: Create new common tag
-        id: create_common_tag
+      - name: Create new tags for all modules
+        id: create_tags
         run: |
-          echo "Creating new tag for common module..."
-          latest_release_tag=${{ env.release_tag }}
-          IFS='/' read -r _ version <<< "$latest_release_tag"
-          IFS='.' read -r major minor patch <<< "$version"
-          new_minor=$((minor + 1))
-          new_common_tag="common/$major.$new_minor.0"
-          echo "New common tag: $new_common_tag"
-          echo "new_common_tag=$new_common_tag" >> $GITHUB_ENV
-          git tag -a $new_common_tag -m "common $new_common_tag"
-          git push origin $new_common_tag
+          modules=("common" "volumeGroupSnapshot" "replication" "migration" "podmon")
+          for module in "${modules[@]}"; do
+            latest_release_tag=${{ env.${module}_release_tag }}
+            IFS='/' read -r _ version <<< "$latest_release_tag"
+            IFS='.' read -r major minor patch <<< "$version"
+            new_minor=$((minor + 1))
+            new_tag="$module/$major.$new_minor.0"
+            echo "Creating new tag for $module: $new_tag"
+            echo "${module}_new_tag=$new_tag" >> $GITHUB_ENV
+            git tag -a $new_tag -m "$module $new_tag"
+            git push origin $new_tag
+          done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create release branch
+      - name: Create release branches for all modules
         run: |
-          echo "Creating release branch..."
-          latest_release_tag=${{ env.release_tag }}
-          IFS='/' read -r _ version <<< "$latest_release_tag"
-          IFS='.' read -r major minor patch <<< "$version"
-          new_minor=$((minor + 1))
-          new_release_branch="release-$major.$new_minor.0"
-          echo "New release branch: $new_release_branch"
-          git checkout -b $new_release_branch
-          git push origin $new_release_branch
+          modules=("common" "volumeGroupSnapshot" "replication" "migration" "podmon")
+          for module in "${modules[@]}"; do
+            latest_release_tag=${{ env.${module}_release_tag }}
+            IFS='/' read -r _ version <<< "$latest_release_tag"
+            IFS='.' read -r major minor patch <<< "$version"
+            new_minor=$((minor + 1))
+            new_release_branch="release-$module-$major.$new_minor.0"
+            echo "Creating release branch for $module: $new_release_branch"
+            git checkout -b $new_release_branch
+            git push origin $new_release_branch
+          done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ env.new_common_tag }}
-          release_name: "${{ env.new_common_tag }}"
-          body: "Release notes for ${{ env.new_common_tag }}"
+          tag_name: ${{ env.common_new_tag }}
+          release_name: |
+            volumeGroupSnapshot ${{ env.volumeGroupSnapshot_new_tag }}, \
+            Replication ${{ env.replication_new_tag }}, \
+            Migration ${{ env.migration_new_tag }}, \
+            Common ${{ env.common_new_tag }}, \
+            Podmon ${{ env.podmon_new_tag }}
+          body: |
+            ## Release Notes
+            - **Common**: ${{ env.common_new_tag }}
+            - **VolumeGroupSnapshot**: ${{ env.volumeGroupSnapshot_new_tag }}
+            - **Replication**: ${{ env.replication_new_tag }}
+            - **Migration**: ${{ env.migration_new_tag }}
+            - **Podmon**: ${{ env.podmon_new_tag }}
           draft: false
           prerelease: false
         env:
