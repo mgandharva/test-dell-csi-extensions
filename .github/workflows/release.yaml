@@ -59,7 +59,7 @@ jobs:
           modules=("volumeGroupSnapshot" "replication" "migration")
           common_version=$(eval echo \${common_new_version})
           branch_name="update-common-dependency"
-          git checkout -b $branch_name
+          git checkout -b $branch_name || git checkout $branch_name
           changes_made=false
           for module in "${modules[@]}"; do
             echo "Updating dependencies for $module"
@@ -102,8 +102,8 @@ jobs:
         run: |
           echo "Waiting for the PR to be merged. Please merge the PR manually."
           while true; do
-            pr_status=$(gh pr view update-common-dependency --json merged --jq '.merged')
-            if [ "$pr_status" = "true" ]; then
+            pr_status=$(gh pr view update-common-dependency --json state --jq '.state')
+            if [ "$pr_status" = "MERGED" ]; then
               echo "PR has been merged."
               break
             fi
