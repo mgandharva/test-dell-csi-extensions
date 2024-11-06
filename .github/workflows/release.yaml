@@ -92,6 +92,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Switch back to base branch
+      
         if: env.changes_made == 'true'
         run: |
           echo "Switching back to base branch test-release2"
