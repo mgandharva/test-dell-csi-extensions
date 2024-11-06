@@ -75,14 +75,16 @@ jobs:
           if [ "$changes_made" = true ]; then
             git commit -m "Update common dependency to v$common_version"
             git push origin $branch_name
+            echo "changes_made=true" >> $GITHUB_ENV
           else
             echo "No changes to commit"
+            echo "changes_made=false" >> $GITHUB_ENV
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create pull request
-        if: steps.update_dependencies_and_create_pr.outputs.changes_made == 'true'
+        if: env.changes_made == 'true'
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -91,28 +93,23 @@ jobs:
           body: "This PR updates the common dependency to v${{ env.common_new_version }}."
 
       - name: Wait for PR to be merged
-        if: steps.update_dependencies_and_create_pr.outputs.changes_made == 'true'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const pr = await github.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number
-            });
-            while (pr.data.state !== 'closed' || !pr.data.merged) {
-              console.log('Waiting for PR to be merged...');
-              await new Promise(resolve => setTimeout(resolve, 60000)); // Wait for 1 minute
-              pr = await github.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: context.payload.pull_request.number
-              });
-            }
-            console.log('PR merged!');
+        if: env.changes_made == 'true'
+        run: |
+          echo "Waiting for the PR to be merged. Please merge the PR manually."
+          while true; do
+            pr_status=$(gh pr view update-common-dependency --json merged --jq '.merged')
+            if [ "$pr_status" = "true" ]; then
+              echo "PR has been merged."
+              break
+            fi
+            echo "PR not merged yet. Sleeping for 1 minute..."
+            sleep 60
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create new tags for other modules
-        # if: steps.update_dependencies_and_create_pr.outputs.changes_made == 'false'
+        if: env.changes_made == 'false' || steps.wait_for_pr_to_be_merged.outputs.pr_merged == 'true'
         run: |
           modules=("volumeGroupSnapshot" "replication" "migration" "podmon")
           for module in "${modules[@]}"; do
