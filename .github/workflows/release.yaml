@@ -108,13 +108,16 @@ jobs:
           body: "This PR updates the common dependency to ${{ env.common_new_version }}."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check branch status
+        if: env.changes_made == 'true'
         run: |
-          echo "Creating pull request..."
-          echo "Branch: update-common-dependency"
-          echo "Base: test-release2"
-          echo "Title: Update common dependency to ${{ env.common_new_version }}"
-          echo "Body: This PR updates the common dependency to ${{ env.common_new_version }}."
-          gh pr create --title "Update common dependency to ${{ env.common_new_version }}" --body "This PR updates the common dependency to ${{ env.common_new_version }}." --base test-release2 --head update-common-dependency
+          echo "Checking branch status..."
+          git status
+          git branch -a
+          git log -1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
       # - name: Wait for PR to be merged
