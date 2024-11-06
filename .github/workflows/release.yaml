@@ -56,10 +56,13 @@ jobs:
       - name: Update dependencies and create PR for other modules
         id: update_dependencies_and_create_pr
         run: |
+          echo "Starting dependency update process..."
           modules=("volumeGroupSnapshot" "replication" "migration")
           common_version=$(eval echo \${common_new_version})
           branch_name="update-common-dependency"
+          echo "Current branch before creating/updating branch: $(git branch --show-current)"
           git checkout -b $branch_name || git checkout $branch_name
+          echo "Current branch after creating/updating branch: $(git branch --show-current)"
           changes_made=false
           for module in "${modules[@]}"; do
             echo "Updating dependencies for $module"
@@ -70,12 +73,16 @@ jobs:
             if [[ -n $(git status --porcelain) ]]; then
               git add $module/go.mod $module/go.sum
               changes_made=true
+              echo "Changes detected and staged for $module"
+            else
+              echo "No changes detected for $module"
             fi
           done
           if [ "$changes_made" = true ]; then
             git commit -m "Update common dependency to v$common_version"
-            git push origin $branch_name
+            git push origin $branch_name --force
             echo "changes_made=true" >> $GITHUB_ENV
+            echo "Changes committed and pushed to $branch_name"
           else
             echo "No changes to commit"
             echo "changes_made=false" >> $GITHUB_ENV
@@ -85,7 +92,10 @@ jobs:
 
       - name: Switch back to base branch
         if: env.changes_made == 'true'
-        run: git checkout test-release2
+        run: |
+          echo "Switching back to base branch test-release2"
+          git checkout test-release2
+          echo "Current branch after switching back: $(git branch --show-current)"
 
       - name: Create pull request
         if: env.changes_made == 'true'
@@ -94,8 +104,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: update-common-dependency
           base: test-release2
-          title: "Update common dependency to v${{ env.common_new_version }}"
-          body: "This PR updates the common dependency to v${{ env.common_new_version }}."
+          title: "Update common dependency to ${{ env.common_new_version }}"
+          body: "This PR updates the common dependency to ${{ env.common_new_version }}."
 
       - name: Wait for PR to be merged
         if: env.changes_made == 'true'
@@ -116,6 +126,7 @@ jobs:
       - name: Create new tags for other modules
         if: env.changes_made == 'false' || steps.wait_for_pr_to_be_merged.outputs.pr_merged == 'true'
         run: |
+          echo "Creating new tags for other modules..."
           modules=("volumeGroupSnapshot" "replication" "migration" "podmon")
           for module in "${modules[@]}"; do
             latest_release_tag=$(eval echo \${${module}_release_tag})
@@ -132,8 +143,6 @@ jobs:
             git tag -a $new_tag -m "$module $new_tag"
             git push origin $new_tag
           done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub release
         uses: actions/create-release@v1
