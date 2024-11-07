@@ -26,6 +26,20 @@ jobs:
           git add changes.txt
           git commit -m "Add changes"
 
+            - name: Check for changes
+      
+      - id: check_changes
+        run: |
+          git fetch origin update-branch
+          git fetch origin test-PR
+          if git diff --quiet origin/test-PR; then
+            echo "No changes to commit"
+            echo "::set-output name=changes::false"
+          else
+            echo "Changes detected"
+            echo "::set-output name=changes::true"
+          fi
+      
       - name: Push changes
         run: git push origin update-branch
 
@@ -33,8 +47,8 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: update-branch
-          base: test-PR
+          branch: origin/update-branch
+          base: origin/test-PR
           title: "Automated PR: Add changes"
           body: "This PR was created automatically by GitHub Actions."
           labels: |
