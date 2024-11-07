@@ -26,9 +26,10 @@ jobs:
           git add changes.txt
           git commit -m "Add changes"
 
-            - name: Check for changes
+           
       
-      - id: check_changes
+      - name: Check for changes
+        id: check_changes
         run: |
           git fetch origin update-branch
           git fetch origin test-PR
