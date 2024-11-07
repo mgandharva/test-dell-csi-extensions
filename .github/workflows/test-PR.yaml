@@ -30,12 +30,15 @@ jobs:
         run: git push origin update-branch
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
+        uses: actions/github-script@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: update-branch
-          base: main
-          title: "Automated PR: Add changes"
-          body: "This PR was created automatically by GitHub Actions."
-          labels: |
-            - automated PR  # Ensure this is properly indented
+          script: |
+            const { data: pullRequest } = await github.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "Automated PR: Add changes",
+              head: "update-branch",
+              base: "test-PR",
+              body: "This PR was created automatically by GitHub Actions.",
+            });
+            console.log(`Created PR #${pullRequest.number}`);
