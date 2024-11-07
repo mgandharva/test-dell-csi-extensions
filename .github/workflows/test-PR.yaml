@@ -1,0 +1,39 @@
+name: Create PR test
+# Invocable as a reusable workflow
+# Can be manually triggered
+on:
+  workflow_call: 
+  workflow_dispatch:
+
+jobs:
+  create-pull-request:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Create new branch
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git checkout -b update-branch
+
+      - name: Make changes
+        run: |
+          # Add your commands to make changes here
+          echo "Some changes" > changes.txt
+          git add changes.txt
+          git commit -m "Add changes"
+
+      - name: Push changes
+        run: git push origin update-branch
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: update-branch
+          title: "Automated PR: Add changes"
+          body: "This PR was created automatically by GitHub Actions."
+          labels: ["automated PR"]
