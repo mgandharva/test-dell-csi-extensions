@@ -13,6 +13,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Check current branch
+        run: |
+          echo "Current branch: $(git branch --show-current)"
+
       - name: Create new branch
         run: |
           git config --global user.name 'github-actions'
