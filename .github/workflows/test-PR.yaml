@@ -31,9 +31,9 @@ jobs:
       - name: Push changes
         run: git push origin update-branch
 
-      - name: Checkout to test-PR branch or base branch
-        run: |
-          git checkout test-PR
+      # - name: Checkout to test-PR branch or base branch
+      #   run: |
+      #     git checkout 
 
       - uses: actions/create-github-app-token@v1.11.0
         id: generate-token
