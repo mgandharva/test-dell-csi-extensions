@@ -4,11 +4,6 @@ name: Create PR test
 on:
   workflow_call: 
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to release (major, minor, patch)'
-        required: true
-        default: 'none'
 jobs:
   create-pull-request:
     runs-on: ubuntu-latest
