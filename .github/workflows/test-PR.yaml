@@ -4,6 +4,11 @@ name: Create PR test
 on:
   workflow_call: 
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (major, minor, patch)'
+        required: true
+        default: 'none'
 jobs:
   create-pull-request:
     runs-on: ubuntu-latest
@@ -14,7 +19,7 @@ jobs:
       - name: Check current branch
         run: |
           echo "Current branch: $(git branch --show-current)"
-          
+
       - name: Create new branch
         run: |
           git config --global user.name 'github-actions'
