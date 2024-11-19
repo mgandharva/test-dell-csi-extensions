@@ -15,11 +15,11 @@ jobs:
         run: |
           echo "Current branch: $(git branch --show-current)"
 
-      - name: Create new branch
-        run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git checkout -b update-branch
+      # - name: Create new branch
+      #   run: |
+      #     git config --global user.name 'github-actions'
+      #     git config --global user.email 'github-actions@github.com'
+      #     git checkout -b update-branch
 
       - name: Make changes
         run: |
@@ -28,8 +28,8 @@ jobs:
           git add changes.txt
           git commit -m "Add changes"
 
-      - name: Push changes
-        run: git push origin update-branch
+      # - name: Push changes
+      #   run: git push origin update-branch
 
       # - name: Checkout to test-PR branch or base branch
       #   run: |
