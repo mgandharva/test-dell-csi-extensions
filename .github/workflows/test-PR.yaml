@@ -4,22 +4,22 @@ name: Create PR test
 on:
   workflow_call: 
   workflow_dispatch:
-
+    inputs:
+      version:
+        description: 'Version to release (major, minor, patch)'
+        required: true
+        default: 'none'
 jobs:
   create-pull-request:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-<<<<<<< HEAD
       - name: Check current branch
         run: |
           echo "Current branch: $(git branch --show-current)"
 
-=======
->>>>>>> 1d3ea3e6a01727e0751766153d271eabcd18e4eb
       - name: Create new branch
         run: |
           git config --global user.name 'github-actions'
