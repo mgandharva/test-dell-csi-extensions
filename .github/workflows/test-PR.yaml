@@ -14,7 +14,7 @@ jobs:
       - name: Check current branch
         run: |
           echo "Current branch: $(git branch --show-current)"
-
+          
       - name: Create new branch
         run: |
           git config --global user.name 'github-actions'
