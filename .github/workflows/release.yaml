@@ -59,10 +59,10 @@ jobs:
           echo "Starting dependency update process..."
           modules=("volumeGroupSnapshot" "replication" "migration")
           common_version=$(eval echo \${common_new_version})
-          branch_name="update-common-dependency"
+        # branch_name="update-common-dependency"
           echo "Current branch before creating/updating branch: $(git branch --show-current)"
-          git checkout -b $branch_name || git checkout $branch_name
-          echo "Current branch after creating/updating branch: $(git branch --show-current)"
+          # git checkout -b $branch_name || git checkout $branch_name
+          # echo "Current branch after creating/updating branch: $(git branch --show-current)"
           changes_made=false
           for module in "${modules[@]}"; do
             echo "Updating dependencies for $module"
@@ -91,13 +91,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Switch back to base branch
+      # - name: Switch back to base branch
       
-        if: env.changes_made == 'true'
-        run: |
-          echo "Switching back to base branch test-release2"
-          git checkout test-release2
-          echo "Current branch after switching back: $(git branch --show-current)"
+      #   if: env.changes_made == 'true'
+      #   run: |
+      #     echo "Switching back to base branch test-release2"
+      #     git checkout test-release2
+      #     echo "Current branch after switching back: $(git branch --show-current)"
 
       - name: Create pull request
         if: env.changes_made == 'true'
@@ -105,7 +105,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: update-common-dependency
-          base: test-release2
+          # base: test-release2
           title: "Update common dependency to ${{ env.common_new_version }}"
           body: "This PR updates the common dependency to ${{ env.common_new_version }}."
         env:
