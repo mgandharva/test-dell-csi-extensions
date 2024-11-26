@@ -28,7 +28,7 @@ jobs:
       - name: Get latest release tags for all modules
         id: get_latest_release_tags
         run: |
-          modules=("common" "volumeGroupSnapshot" "replication" "migration" "podmon")
+          modules=("volumeGroupSnapshot" "replication" "migration" "common" "podmon")
           for module in "${modules[@]}"; do
             latest_release_tag=$(git tag -l "$module/*" | sort -V | tail -n 1)
             echo "Latest release tag for $module: $latest_release_tag"
@@ -54,19 +54,17 @@ jobs:
           
           git tag -a $new_tag -m "$module $new_tag"
           git push origin $new_tag
+          echo "Current branch : $(git branch --show-current)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update dependencies and create PR for other modules
-        id: update_dependencies_and_create_pr
+      - name: Update dependencies
+        id: update_dependencies
         run: |
           echo "Starting dependency update process..."
           modules=("volumeGroupSnapshot" "replication" "migration")
           common_version=$(eval echo \${common_new_version})
-        # branch_name="update-common-dependency"
-          echo "Current branch before creating/updating branch: $(git branch --show-current)"
-          # git checkout -b $branch_name || git checkout $branch_name
-          # echo "Current branch after creating/updating branch: $(git branch --show-current)"
+          echo "Current branch : $(git branch --show-current)"
           changes_made=false
           for module in "${modules[@]}"; do
             echo "Updating dependencies for $module"
@@ -85,7 +83,7 @@ jobs:
           if [ "$changes_made" = true ]; then
             git status
             git commit -m "Update common dependency to $common_version"
-            git push origin $branch_name --force
+            # git push origin $branch_name --force
             echo "changes_made=true" >> $GITHUB_ENV
             echo "Changes committed and pushed to $branch_name"
           else
