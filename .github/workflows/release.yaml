@@ -4,6 +4,10 @@ name: Release dell csi extensions optimized
 on:
   workflow_call: 
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (major, minor, patch) Ex: 1.0.0'
+        required: true    
 jobs:
   release-modules:
     runs-on: ubuntu-latest
@@ -24,48 +28,70 @@ jobs:
       - name: Get latest release tags for all modules
         id: get_latest_release_tags
         run: |
-          modules=("volumeGroupSnapshot" "replication" "migration" "common" "podmon")
+          modules=("common" "volumeGroupSnapshot" "replication" "migration" "podmon")
           for module in "${modules[@]}"; do
             latest_release_tag=$(git tag -l "$module/*" | sort -V | tail -n 1)
             echo "Latest release tag for $module: $latest_release_tag"
             echo "${module}_release_tag=$latest_release_tag" >> $GITHUB_ENV
             version=${latest_release_tag#*/}
             echo "${module}_version=$version" >> $GITHUB_ENV
-          done  # <-- Added this line to close the for loop
+          done
 
-      - name: Create new tags for all modules
-        id: create_tags
+      - name: Create new tag for common module
+        id: create_common_tag
         run: |
-          modules=("volumeGroupSnapshot" "replication" "migration" "common" "podmon")
-          for module in "${modules[@]}"; do
-            latest_release_tag=$(eval echo \${${module}_release_tag})
-            IFS='/' read -r _ version <<< "$latest_release_tag"
-            IFS='.' read -r major minor patch <<< "$version"
-            new_minor=$((minor + 1))
-            new_tag="$module/$major.$new_minor.0"
-            echo "Creating new tag for $module: $new_tag"
-            echo "${module}_new_tag=$new_tag" >> $GITHUB_ENV
-            new_version="$major.$new_minor.0"
-            echo "${module}_new_version=$new_version" >> $GITHUB_ENV
-            git tag -a $new_tag -m "$module $new_tag"
-            git push origin $new_tag
-          done  # <-- Added this line to close the for loop
+          module="common"
+          latest_release_tag=$(eval echo \${${module}_release_tag})
+          IFS='/' read -r _ version <<< "$latest_release_tag"
+          IFS='.' read -r major minor patch <<< "$version"
+          new_minor=$((minor + 1))
+          new_tag="$module/$major.$new_minor.0"
+          new_version="$major.$new_minor.0"
+          
+          echo "Creating new tag for $module: $new_tag"
+          echo "${module}_new_tag=$new_tag" >> $GITHUB_ENV
+          echo "${module}_new_version=$new_version" >> $GITHUB_ENV
+          
+          git tag -a $new_tag -m "$module $new_tag"
+          git push origin $new_tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create release branches for all modules
+      - name: Update dependencies and create PR for other modules
+        id: update_dependencies_and_create_pr
         run: |
-          modules=("volumeGroupSnapshot" "replication" "migration" "common" "podmon")
+          echo "Starting dependency update process..."
+          modules=("volumeGroupSnapshot" "replication" "migration")
+          common_version=$(eval echo \${common_new_version})
+        # branch_name="update-common-dependency"
+          echo "Current branch before creating/updating branch: $(git branch --show-current)"
+          # git checkout -b $branch_name || git checkout $branch_name
+          # echo "Current branch after creating/updating branch: $(git branch --show-current)"
+          changes_made=false
           for module in "${modules[@]}"; do
-            latest_release_tag=$(eval echo \${${module}_release_tag})
-            IFS='/' read -r _ version <<< "$latest_release_tag"
-            IFS='.' read -r major minor patch <<< "$version"
-            new_minor=$((minor + 1))
-            new_release_branch="release-$module-$major.$new_minor.0"
-            echo "Creating release branch for $module: $new_release_branch"
-            git checkout -b $new_release_branch
-            git push origin $new_release_branch
-          done  # <-- Added this line to close the for loop
+            echo "Updating dependencies for $module"
+            cd $module
+            go get github.com/dell/dell-csi-extensions/common@v1.6.0
+            go mod tidy
+            cd ..
+            if [[ -n $(git status --porcelain) ]]; then
+              git add $module/go.mod $module/go.sum
+              changes_made=true
+              echo "Changes detected and staged for $module"
+            else
+              echo "No changes detected for $module"
+            fi
+          done
+          if [ "$changes_made" = true ]; then
+            git status
+            git commit -m "Update common dependency to $common_version"
+            git push origin $branch_name --force
+            echo "changes_made=true" >> $GITHUB_ENV
+            echo "Changes committed and pushed to $branch_name"
+          else
+            echo "No changes to commit"
+            echo "changes_made=false" >> $GITHUB_ENV
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
