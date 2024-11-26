@@ -53,8 +53,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update dependencies and create PR for other modules
-        id: update_dependencies_and_create_pr
+      - name: Update dependencies
+        id: update_dependencies
         run: |
           echo "Starting dependency update process..."
           modules=("volumeGroupSnapshot" "replication" "migration")
