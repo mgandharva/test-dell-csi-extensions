@@ -1,0 +1,54 @@
+name: Create PR test
+# Invocable as a reusable workflow
+# Can be manually triggered
+on:
+  workflow_call: 
+  workflow_dispatch:
+jobs:
+  create-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Check current branch
+        run: |
+          echo "Current branch: $(git branch --show-current)"
+
+      - name: Create new branch
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+      #     git checkout -b update-branch
+
+      - name: Make changes
+        run: |
+          # Add your commands to make changes here
+          echo "Some changes" > changes.txt
+          git add changes.txt
+          git commit -m "Add changes"
+
+      # - name: Push changes
+      #   run: git push origin update-branch
+
+      # - name: Checkout to test-PR branch or base branch
+      #   run: |
+      #     git checkout 
+
+      - uses: actions/create-github-app-token@v1.11.0
+        id: generate-token
+        with:
+          app-id: ${{ vars.CSM_RELEASE_APP_ID }}
+          private-key: ${{ secrets.CSM_RELEASE_APP_PRIVATE_KEY }}
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          branch: "update-branch"
+          commit-message: "Update PR workflow"
+          title: "Updates"
+          body: |
+            Update branch
+          sign-commits: true
+          delete-branch: true

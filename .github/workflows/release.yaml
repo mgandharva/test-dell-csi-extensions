@@ -3,7 +3,7 @@ name: Release dell csi extensions optimized
 # Can be manually triggered
 on:
   workflow_call: 
-  workflow_dispatch:
+  workflow_dispatch:  
 jobs:
   release-modules:
     runs-on: ubuntu-latest
@@ -50,6 +50,7 @@ jobs:
           
           git tag -a $new_tag -m "$module $new_tag"
           git push origin $new_tag
+          echo "Current branch : $(git branch --show-current)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -59,7 +60,7 @@ jobs:
           echo "Starting dependency update process..."
           modules=("volumeGroupSnapshot" "replication" "migration")
           common_version=$(eval echo \${common_new_version})
-          echo "Current branch after creating/updating branch: $(git branch --show-current)"
+          echo "Current branch : $(git branch --show-current)"
           changes_made=false
           for module in "${modules[@]}"; do
             echo "Updating dependencies for $module"
@@ -78,7 +79,7 @@ jobs:
           if [ "$changes_made" = true ]; then
             git status
             git commit -m "Update common dependency to $common_version"
-            git push origin $branch_name --force
+            # git push origin $branch_name --force
             echo "changes_made=true" >> $GITHUB_ENV
             echo "Changes committed and pushed to $branch_name"
           else
@@ -95,16 +96,24 @@ jobs:
       #     echo "Switching back to base branch test-release2"
       #     git checkout test-release2
       #     echo "Current branch after switching back: $(git branch --show-current)"
+      - uses: actions/create-github-app-token@v1.11.0
+        id: generate-token
+        with:
+          app-id: ${{ vars.CSM_RELEASE_APP_ID }}
+          private-key: ${{ secrets.CSM_RELEASE_APP_PRIVATE_KEY }}
 
       - name: Create pull request
         if: env.changes_made == 'true'
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.generate-token.outputs.token }}
           branch: update-common-dependency
           # base: test-release2
+          commit-message: "Update common dependency to ${{ env.common_new_version }}"
           title: "Update common dependency to ${{ env.common_new_version }}"
           body: "This PR updates the common dependency to ${{ env.common_new_version }}."
+          sign-commits: true
+          delete-branch: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -136,7 +145,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create new tags for other modules
-        if: env.changes_made == 'false' || steps.wait_for_pr_to_be_merged.outputs.pr_merged == 'true'
+        if: env.changes_made == 'true' || steps.wait_for_pr_to_be_merged.outputs.pr_merged == 'true'
         run: |
           echo "Creating new tags for other modules..."
           modules=("volumeGroupSnapshot" "replication" "migration" "podmon")
