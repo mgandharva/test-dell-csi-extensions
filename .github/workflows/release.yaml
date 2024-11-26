@@ -4,6 +4,10 @@ name: Release dell csi extensions optimized
 on:
   workflow_call: 
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (major, minor, patch) Ex: 1.0.0'
+        required: true    
 jobs:
   release-modules:
     runs-on: ubuntu-latest
