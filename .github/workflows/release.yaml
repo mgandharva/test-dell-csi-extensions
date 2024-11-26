@@ -3,11 +3,7 @@ name: Release dell csi extensions optimized
 # Can be manually triggered
 on:
   workflow_call: 
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to release (major, minor, patch) Ex: 1.0.0'
-        required: true    
+  workflow_dispatch:  
 jobs:
   release-modules:
     runs-on: ubuntu-latest
