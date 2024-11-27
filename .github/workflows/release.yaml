@@ -107,6 +107,7 @@ jobs:
             fi
             echo "PR not merged yet. Sleeping for 1 minute..."
             sleep 60
+          done
 
       - name: Create new tags for other modules
         if: env.changes_made == 'true'
@@ -126,6 +127,7 @@ jobs:
             
             git tag -a $new_tag -m "$module $new_tag"
             git push origin $new_tag
+          done
 
       - name: Create GitHub release
         uses: actions/create-release@v1
