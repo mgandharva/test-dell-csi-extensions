@@ -112,7 +112,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create new tags for other modules
-        if: env.changes_made == 'true' && steps.wait_for_pr_to_be_merged.outputs.pr_merged == 'true'
+        if: env.changes_made == 'true'
         run: |
           modules=("volumeGroupSnapshot" "replication" "migration" "podmon")
           for module in "${modules[@]}"; do
