@@ -108,6 +108,8 @@ jobs:
             echo "PR not merged yet. Sleeping for 1 minute..."
             sleep 60
           done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create new tags for other modules
         if: env.changes_made == 'true' && steps.wait_for_pr_to_be_merged.outputs.pr_merged == 'true'
