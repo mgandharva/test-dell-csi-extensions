@@ -172,8 +172,10 @@ jobs:
           #   - **Migration**: ${{ github.event.inputs.migration_new_version }}
           #   - **Common**: ${{ github.event.inputs.common_new_version }}
           #   - **Podmon**: ${{ github.event.inputs.podmon_new_version }}
-          draft: false
+          generate_release_notes: true
+          draft: true
           prerelease: false
+          make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
