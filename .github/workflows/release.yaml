@@ -140,24 +140,62 @@ jobs:
             git push origin $new_tag
           done
 
-      - name: Create GitHub release
-        uses: actions/create-release@v1
+
+      # - name: Create Release
+      #   id: release_notes
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     tag_name: v${{ github.event.inputs.version }}
+      #     name: Release v${{ github.event.inputs.version }}
+      #     draft: true
+      #     prerelease: false
+      #     generate_release_notes: true
+      #     make_latest: true
+      #   env:
+      #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        id: release_notes
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.volumeGroupSnapshot_new_tag }}  # Use the volumeGroupSnapshot tag
-          release_name: |
-            volumeGroupSnapshot ${{ env.volumeGroupSnapshot_new_version }},
-            Replication ${{ env.replication_new_version }}, 
-            Migration ${{ env.migration_new_version }},
-            Common ${{ env.common_new_version }}, 
-            Podmon ${{ env.podmon_new_version }}
-          body: |
-            ## Release Notes
-            - **VolumeGroupSnapshot**: ${{ env.volumeGroupSnapshot_new_version }}
-            - **Replication**: ${{ env.replication_new_version }}
-            - **Migration**: ${{ env.migration_new_version }}
-            - **Common**: ${{ env.common_new_version }}
-            - **Podmon**: ${{ env.podmon_new_version }}
+          tag_name: ${{ github.event.inputs.volumeGroupSnapshot_new_tag }}  # Use the volumeGroupSnapshot tag
+          name: |
+            Release volumeGroupSnapshot ${{ github.event.inputs.volumeGroupSnapshot_new_version }},
+            Replication ${{ github.event.inputs.replication_new_version }}, 
+            Migration ${{ github.event.inputs.migration_new_version }},
+            Common ${{ github.event.inputs.common_new_version }}, 
+            Podmon ${{ github.event.inputs.podmon_new_version }}
+          # body: |
+          #   ## Release Notes
+          #   - **VolumeGroupSnapshot**: ${{ github.event.inputs.volumeGroupSnapshot_new_version }}
+          #   - **Replication**: ${{ github.event.inputs.replication_new_version }}
+          #   - **Migration**: ${{ github.event.inputs.migration_new_version }}
+          #   - **Common**: ${{ github.event.inputs.common_new_version }}
+          #   - **Podmon**: ${{ github.event.inputs.podmon_new_version }}
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+      # - name: Create GitHub release
+      #   uses: actions/create-release@v1
+      #   with:
+      #     tag_name: ${{ env.volumeGroupSnapshot_new_tag }}  # Use the volumeGroupSnapshot tag
+      #     release_name: |
+      #       volumeGroupSnapshot ${{ env.volumeGroupSnapshot_new_version }},
+      #       Replication ${{ env.replication_new_version }}, 
+      #       Migration ${{ env.migration_new_version }},
+      #       Common ${{ env.common_new_version }}, 
+      #       Podmon ${{ env.podmon_new_version }}
+      #     body: |
+      #       ## Release Notes
+      #       - **VolumeGroupSnapshot**: ${{ env.volumeGroupSnapshot_new_version }}
+      #       - **Replication**: ${{ env.replication_new_version }}
+      #       - **Migration**: ${{ env.migration_new_version }}
+      #       - **Common**: ${{ env.common_new_version }}
+      #       - **Podmon**: ${{ env.podmon_new_version }}
+      #     draft: false
+      #     prerelease: false
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
