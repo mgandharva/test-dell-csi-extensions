@@ -1,4 +1,4 @@
-module github.com/dell/dell-csi-extensions/volumeGroupSnapshot
+module github.com/mgandharva/test-dell-csi-extensions/volumeGroupSnapshot
 
 go 1.23
 

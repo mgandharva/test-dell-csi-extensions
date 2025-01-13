@@ -1,4 +1,4 @@
-module github.com/dell/dell-csi-extensions/replication
+module github.com/mgandharva/test-dell-csi-extensions/replication
 
 go 1.23
 

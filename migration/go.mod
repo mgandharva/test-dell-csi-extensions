@@ -1,4 +1,4 @@
-module github.com/dell/dell-csi-extensions/migration
+module github.com/mgandharva/test-dell-csi-extensions/migration
 
 go 1.23
 
