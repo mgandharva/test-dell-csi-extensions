@@ -89,7 +89,9 @@ jobs:
             latest_release_tag=$(eval echo \${${module}_release_tag})
             echo "latest tag for $module: $latest_release_tag"
             IFS='/' read -r _ version <<< "$latest_release_tag"
+            echo "latest version for $module: $version"
             IFS='.' read -r major minor patch <<< "$version"
+            echo "major: $major, minor: $minor, patch: $patch"
             if [ "$release_type" = "major" ]; then
               new_major=$((major + 1))
               new_minor=0
