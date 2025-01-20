@@ -22,7 +22,7 @@ on:
       modules_to_release:
         description: "Modules to release (required if release_type is minor)"
         required: false
-        type: string
+        type: choice
         options:
           - volumeGroupSnapshot
           - replication
