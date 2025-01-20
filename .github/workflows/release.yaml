@@ -20,9 +20,9 @@ on:
           - major
           - minor
       modules_to_release:
-        description: "Modules to release (required if release_type is minor)"
+        description: "Modules to release (select multiple for minor release)"
         required: false
-        type: choice
+        type: string
         options:
           - volumeGroupSnapshot
           - replication
@@ -42,11 +42,11 @@ jobs:
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
         with:
-            gpg_private_key: ${{ secrets.CSM_GPG_PRIVATE_KEY }}
-            git_user_signingkey: true
-            git_commit_gpgsign: true
-            git_tag_gpgsign: true
-            git_config_global: true
+          gpg_private_key: ${{ secrets.CSM_GPG_PRIVATE_KEY }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
+          git_config_global: true
 
       - name: Fetch all tags
         run: git fetch --tags
