@@ -20,7 +20,7 @@ on:
           - major
           - minor
       modules_to_release:
-        description: "Modules to release (select multiple for minor release)"
+        description: "Modules to release (applicable only if release_type is minor)"
         required: false
         type: string
         options:
@@ -42,11 +42,11 @@ jobs:
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
         with:
-          gpg_private_key: ${{ secrets.CSM_GPG_PRIVATE_KEY }}
-          git_user_signingkey: true
-          git_commit_gpgsign: true
-          git_tag_gpgsign: true
-          git_config_global: true
+            gpg_private_key: ${{ secrets.CSM_GPG_PRIVATE_KEY }}
+            git_user_signingkey: true
+            git_commit_gpgsign: true
+            git_tag_gpgsign: true
+            git_config_global: true
 
       - name: Fetch all tags
         run: git fetch --tags
@@ -70,20 +70,19 @@ jobs:
           if [ "$release_type" = "minor" ]; then
             modules_to_release="${{ github.event.inputs.modules_to_release }}"
             if [ -z "$modules_to_release" ]; then
-              echo "modules_to_release input is required for minor release."
+              echo "Error: 'modules_to_release' input is required for minor release type."
               exit 1
             fi
             IFS=',' read -r -a modules <<< "$modules_to_release"
           else
             modules=("volumeGroupSnapshot" "replication" "migration" "common" "podmon")
           fi
-          echo "modules $modules"
-          echo "modules=(${modules[@]})" >> $GITHUB_ENV
+          echo "modules_as_string=${modules[*]}" >> $GITHUB_ENV
 
       - name: Create new tags
         id: create_new_tags
         run: |
-          modules=${modules[@]}
+          modules=(${modules_as_string})
           release_type="${{ github.event.inputs.release_type }}"
           for module in "${modules[@]}"; do
             echo "Creating new tag for $module"
@@ -111,7 +110,7 @@ jobs:
       - name: Update dependencies
         id: update_dependencies
         run: |
-          modules=(${modules[@]})
+          modules=(${modules_as_string})
           common_version=$(eval echo \${common_new_version})
           changes_made=false
           for module in "${modules[@]}"; do
@@ -173,7 +172,7 @@ jobs:
       - name: Create new tags for modules (excluding common)
         if: steps.create_new_tags.outputs || ${{ github.event.inputs.release_type }} == 'minor'
         run: |
-          modules=(${modules[@]})
+          modules=(${modules_as_string})
           for module in "${modules[@]}"; do
             if [[ "$module" != "common" ]]; then
               latest_release_tag=$(eval echo \${${module}_release_tag})
@@ -190,7 +189,7 @@ jobs:
       - name: Generate release title
         id: generate_release_title
         run: |
-          modules=(${modules[@]})
+          modules=(${modules_as_string})
           release_title=""
           for module in "${modules[@]}"; do
             new_version=$(eval echo \${${module}_new_version})
