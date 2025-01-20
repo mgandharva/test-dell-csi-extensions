@@ -13,14 +13,14 @@ on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: "Release type for modules (major or minor)"
+        description: "Release type (minor or patch)"
         required: true
         type: choice
         options:
-          - major
           - minor
+          - patch
       modules_to_release:
-        description: "Modules to release (applicable only if release_type is minor)"
+        description: "Modules to release (required if release_type is patch)"
         required: false
         type: string
         options:
@@ -78,6 +78,7 @@ jobs:
             modules=("volumeGroupSnapshot" "replication" "migration" "common" "podmon")
           fi
           echo "modules_as_string=${modules[*]}" >> $GITHUB_ENV
+          echo "release_type=$release_type" >> $GITHUB_ENV
 
       - name: Create new tags
         id: create_new_tags
@@ -87,20 +88,16 @@ jobs:
           for module in "${modules[@]}"; do
             echo "Creating new tag for $module"
             latest_release_tag=$(eval echo \${${module}_release_tag})
-            echo "latest tag for $module: $latest_release_tag"
             IFS='/' read -r _ version <<< "$latest_release_tag"
-            echo "latest version for $module: $version"
             IFS='.' read -r major minor patch <<< "$version"
-            echo "major: $major, minor: $minor, patch: $patch"
-            if [ "$release_type" = "major" ]; then
-              new_major=$((major + 1))
-              new_minor=0
-            elif [ "$release_type" = "minor" ]; then
-              new_major=$major
+            if [ "$release_type" = "minor" ]; then
               new_minor=$((minor + 1))
+              new_patch=0
+              new_version="$major.$new_minor.$new_patch"
+            elif [ "$release_type" = "patch" ]; then
+              new_version="$major.$minor.$((patch + 1))"
             fi
-            new_tag="$module/$new_major.$new_minor.0"
-            new_version="$new_major.$new_minor.0"
+            new_tag="$module/$new_version"
             echo "Creating new tag for $module: $new_tag"
             echo "${module}_new_tag=$new_tag" >> $GITHUB_ENV
             echo "${module}_new_version=$new_version" >> $GITHUB_ENV
@@ -181,8 +178,14 @@ jobs:
               latest_release_tag=$(eval echo \${${module}_release_tag})
               IFS='/' read -r _ version <<< "$latest_release_tag"
               IFS='.' read -r major minor patch <<< "$version"
-              new_tag=$(eval echo \${${module}_new_tag})
-              new_version=$(eval echo \${${module}_new_version})
+              if [ "$release_type" = "minor" ]; then
+                new_minor=$((minor + 1))
+                new_patch=0
+                new_version="$major.$new_minor.$new_patch"
+              elif [ "$release_type" = "patch" ]; then
+                new_version="$major.$minor.$((patch + 1))"
+              fi
+              new_tag="$module/$new_version"
               echo "Creating new tag for $module: $new_tag"
               git tag -s -a $new_tag -m "$module $new_tag"
               git push origin $new_tag
