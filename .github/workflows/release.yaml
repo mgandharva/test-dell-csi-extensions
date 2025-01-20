@@ -8,11 +8,27 @@
 # 7.All the steps are automated except the step 4.
 
 name: Release Dell-CSI-Extensions
-# Invocable as a reusable workflow
-# Can be manually triggered
+
 on:
-  workflow_call: 
-  workflow_dispatch:  
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Release type (minor or patch)"
+        required: true
+        type: choice
+        options:
+          - minor
+          - patch
+      modules_to_release:
+        description: "Modules to release (required if release_type is patch)"
+        required: false
+        type: string
+        options:
+          - volumeGroupSnapshot
+          - replication
+          - migration
+          - common
+          - podmon
 
 jobs:
   release-modules:
@@ -47,40 +63,66 @@ jobs:
             echo "${module}_version=$version" >> $GITHUB_ENV
           done
 
-      - name: Create new tag for common module
-        id: create_common_tag
+      - name: Setup Inputs
+        id: setup_inputs
         run: |
-          module="common"
-          latest_release_tag=$(eval echo \${${module}_release_tag})
-          IFS='/' read -r _ version <<< "$latest_release_tag"
-          IFS='.' read -r major minor patch <<< "$version"
-          new_minor=$((minor + 1))
-          new_tag="$module/$major.$new_minor.0"
-          new_version="$major.$new_minor.0"
-          
-          echo "Creating new tag for $module: $new_tag"
-          echo "${module}_new_tag=$new_tag" >> $GITHUB_ENV
-          echo "${module}_new_version=$new_version" >> $GITHUB_ENV
-          
-          git tag -s -a $new_tag -m "$module $new_tag"
-          git push origin $new_tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          release_type="${{ github.event.inputs.release_type }}"
+          if [ "$release_type" = "minor" ]; then
+            modules_to_release="${{ github.event.inputs.modules_to_release }}"
+            if [ -z "$modules_to_release" ]; then
+              echo "Error: 'modules_to_release' input is required for minor release type."
+              exit 1
+            fi
+            IFS=',' read -r -a modules <<< "$modules_to_release"
+          else
+            modules=("volumeGroupSnapshot" "replication" "migration" "common" "podmon")
+          fi
+          echo "modules_as_string=${modules[*]}" >> $GITHUB_ENV
+          echo "release_type=$release_type" >> $GITHUB_ENV
+
+      - name: Create new tags
+        id: create_new_tags
+        run: |
+          modules=(${modules_as_string})
+          release_type="${{ github.event.inputs.release_type }}"
+          for module in "${modules[@]}"; do
+            echo "Creating new tag for $module"
+            latest_release_tag=$(eval echo \${${module}_release_tag})
+            IFS='/' read -r _ version <<< "$latest_release_tag"
+            IFS='.' read -r major minor patch <<< "$version"
+            if [ "$release_type" = "minor" ]; then
+              new_minor=$((minor + 1))
+              new_patch=0
+              new_version="$major.$new_minor.$new_patch"
+            elif [ "$release_type" = "patch" ]; then
+              new_version="$major.$minor.$((patch + 1))"
+            fi
+            new_tag="$module/$new_version"
+            echo "Creating new tag for $module: $new_tag"
+            echo "${module}_new_tag=$new_tag" >> $GITHUB_ENV
+            echo "${module}_new_version=$new_version" >> $GITHUB_ENV
+            if [ "$module" = "common" ]; then
+              git tag -s -a $new_tag -m "$module $new_tag"
+              git push origin $new_tag
+            fi
+          done
 
       - name: Update dependencies
         id: update_dependencies
         run: |
-          modules=("volumeGroupSnapshot" "replication" "migration")
+          modules=(${modules_as_string})
           common_version=$(eval echo \${common_new_version})
           changes_made=false
           for module in "${modules[@]}"; do
-            cd $module
-            go get github.com/dell/dell-csi-extensions/common@$common_version
-            go mod tidy
-            cd ..
-            if [[ -n $(git status --porcelain) ]]; then
-              git add $module/go.mod $module/go.sum
-              changes_made=true
+            if [[ "$module" != "common" ]]; then
+              cd $module
+              go get github.com/dell/dell-csi-extensions/common@$common_version
+              go mod tidy
+              cd ..
+              if [[ -n $(git status --porcelain) ]]; then
+                git add $module/go.mod $module/go.sum
+                changes_made=true
+              fi
             fi
           done
           if [ "$changes_made" = true ]; then
@@ -88,7 +130,6 @@ jobs:
             echo "changes_made=true" >> $GITHUB_ENV
           else
             echo "changes_made=false" >> $GITHUB_ENV
-          fi
 
       - uses: actions/create-github-app-token@v1.11.0
         id: generate-token
@@ -123,45 +164,53 @@ jobs:
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Pull latest changes from main
         if: env.changes_made == 'true'
-        run: |
-          git pull origin main
+        run: git pull origin main
 
-      - name: Create new tags for other modules
-        if: env.changes_made == 'true'
+      - name: Create new tags for modules (excluding common)
+        if: steps.create_new_tags.outputs || ${{ github.event.inputs.release_type }} == 'minor'
         run: |
-          modules=("volumeGroupSnapshot" "replication" "migration" "podmon")
+          modules=(${modules_as_string})
           for module in "${modules[@]}"; do
-            latest_release_tag=$(eval echo \${${module}_release_tag})
-            IFS='/' read -r _ version <<< "$latest_release_tag"
-            IFS='.' read -r major minor patch <<< "$version"
-            new_minor=$((minor + 1))
-            new_tag="$module/$major.$new_minor.0"
-            new_version="$major.$new_minor.0"
-            
-            echo "Creating new tag for $module: $new_tag"
-            echo "${module}_new_tag=$new_tag" >> $GITHUB_ENV
-            echo "${module}_new_version=$new_version" >> $GITHUB_ENV
-            
-            git tag -s -a $new_tag -m "$module $new_tag"
-            git push origin $new_tag
+            if [[ "$module" != "common" ]]; then
+              latest_release_tag=$(eval echo \${${module}_release_tag})
+              IFS='/' read -r _ version <<< "$latest_release_tag"
+              IFS='.' read -r major minor patch <<< "$version"
+              if [ "$release_type" = "minor" ]; then
+                new_minor=$((minor + 1))
+                new_patch=0
+                new_version="$major.$new_minor.$new_patch"
+              elif [ "$release_type" = "patch" ]; then
+                new_version="$major.$minor.$((patch + 1))"
+              fi
+              new_tag="$module/$new_version"
+              echo "Creating new tag for $module: $new_tag"
+              git tag -s -a $new_tag -m "$module $new_tag"
+              git push origin $new_tag
+            fi
           done
 
+      - name: Generate release title
+        id: generate_release_title
+        run: |
+          modules=(${modules_as_string})
+          release_title=""
+          for module in "${modules[@]}"; do
+            new_version=$(eval echo \${${module}_new_version})
+            if [[ -n "$new_version" ]]; then
+              release_title+="$module $new_version, "
+            fi
+          done
+          release_title=${release_title%, }  # Remove the trailing comma and space
+          echo "release_title=$release_title" >> $GITHUB_ENV
+
       - name: Create GitHub Release
-        id: release_notes
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.volumeGroupSnapshot_new_tag }}  # Use the volumeGroupSnapshot tag
-          name: |
-            Release volumeGroupSnapshot ${{ env.volumeGroupSnapshot_new_version }},
-            Replication ${{ env.replication_new_version }}, 
-            Migration ${{ env.migration_new_version }},
-            Common ${{ env.common_new_version }}, 
-            Podmon ${{ env.podmon_new_version }}
-          generate_release_notes: true
+          tag_name: ${{ env.volumeGroupSnapshot_new_tag }}  # Use one of the new tags as a placeholder
+          name: ${{ env.release_title }}
           draft: true
-          prerelease: false
-          make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
