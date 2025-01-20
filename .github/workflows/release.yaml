@@ -87,6 +87,7 @@ jobs:
           for module in "${modules[@]}"; do
             echo "Creating new tag for $module"
             latest_release_tag=$(eval echo \${${module}_release_tag})
+            echo "latest tag for $module: $latest_release_tag"
             IFS='/' read -r _ version <<< "$latest_release_tag"
             IFS='.' read -r major minor patch <<< "$version"
             if [ "$release_type" = "major" ]; then
