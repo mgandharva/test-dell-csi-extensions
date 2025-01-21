@@ -81,8 +81,13 @@ jobs:
       - name: Update dependencies
         id: update_dependencies
         run: |
-          modules=("volumeGroupSnapshot" "replication" "migration")
-          common_version="${COMMON_VERSION}"
+          declare -A modules=( 
+            ["volumeGroupSnapshot"]="${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}",
+            ["replication"]="${{ env.REPLICATION_VERSION }}",
+            ["migration"]="${{ env.MIGRATION_VERSION }}"
+          )
+
+          common_version="${{ env.COMMON_VERSION }}"
           if [ -z "$common_version" ]; then
             common_version=$(git tag -l "common/*" | sort -V | tail -n 1 | cut -d'/' -f2)
             echo "Using latest common version: $common_version"
@@ -91,9 +96,9 @@ jobs:
           fi
 
           changes_made=false
-          for module in "${modules[@]}"; do
-            input_version=$(eval echo \${${module^^}_VERSION})
-            echo "input_version=$input_version"
+          for module in "${!modules[@]}"; do
+            input_version="${modules[$module]}"
+            echo "$module input_version=$input_version"
             if [ -n "$input_version" ]; then
               echo "Updating dependencies for module: $module"
               cd $module
@@ -120,58 +125,58 @@ jobs:
           app-id: ${{ vars.CSM_RELEASE_APP_ID }}
           private-key: ${{ secrets.CSM_RELEASE_APP_PRIVATE_KEY }}
 
-      - name: Create pull request
-        if: env.changes_made == 'true'
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ steps.generate-token.outputs.token }}
-          branch: update-common-dependency
-          commit-message: "Update common dependency to ${{ env.common_new_version }}"
-          title: "Update common dependency to ${{ env.common_new_version }}"
-          body: "This PR updates the common dependency to ${{ env.common_new_version }}."
-          sign-commits: true
-          delete-branch: true
+      # - name: Create pull request
+      #   if: env.changes_made == 'true'
+      #   uses: peter-evans/create-pull-request@v7
+      #   with:
+      #     token: ${{ steps.generate-token.outputs.token }}
+      #     branch: update-common-dependency
+      #     commit-message: "Update common dependency to ${{ env.common_new_version }}"
+      #     title: "Update common dependency to ${{ env.common_new_version }}"
+      #     body: "This PR updates the common dependency to ${{ env.common_new_version }}."
+      #     sign-commits: true
+      #     delete-branch: true
 
-      - name: Wait for PR to be merged
-        if: env.changes_made == 'true'
-        run: |
-          echo "Waiting for the PR to be merged. Please merge the PR manually."
-          while true; do
-            pr_status=$(gh pr view update-common-dependency --json state --jq '.state')
-            if [ "$pr_status" = "MERGED" ]; then
-              echo "PR has been merged."
-              break
-            fi
-            echo "PR not merged yet. Sleeping for 1 minute..."
-            sleep 60
-          done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Wait for PR to be merged
+      #   if: env.changes_made == 'true'
+      #   run: |
+      #     echo "Waiting for the PR to be merged. Please merge the PR manually."
+      #     while true; do
+      #       pr_status=$(gh pr view update-common-dependency --json state --jq '.state')
+      #       if [ "$pr_status" = "MERGED" ]; then
+      #         echo "PR has been merged."
+      #         break
+      #       fi
+      #       echo "PR not merged yet. Sleeping for 1 minute..."
+      #       sleep 60
+      #     done
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pull latest changes from main
-        if: env.changes_made == 'true'
-        run: |
-          git pull origin main
+      # - name: Pull latest changes from main
+      #   if: env.changes_made == 'true'
+      #   run: |
+      #     git pull origin main
 
-      - name: Create new tags for all modules
-        if: env.changes_made == 'true'
-        run: |
-          declare -A modules=( 
-            ["volumeGroupSnapshot"]="${VOLUME_GROUP_SNAPSHOT_VERSION}" 
-            ["replication"]="${REPLICATION_VERSION}"
-            ["migration"]="${MIGRATION_VERSION}"
-            ["podmon"]="${PODMON_VERSION}"
-          )
-          for module in "${!modules[@]}"; do
-            new_version="${modules[$module]}"
-            if [ -n "$new_version" ]; then
-              new_tag="$module/$new_version"
+      # - name: Create new tags for all modules
+      #   if: env.changes_made == 'true'
+      #   run: |
+      #     declare -A modules=( 
+      #       ["volumeGroupSnapshot"]="${VOLUME_GROUP_SNAPSHOT_VERSION}" 
+      #       ["replication"]="${REPLICATION_VERSION}"
+      #       ["migration"]="${MIGRATION_VERSION}"
+      #       ["podmon"]="${PODMON_VERSION}"
+      #     )
+      #     for module in "${!modules[@]}"; do
+      #       new_version="${modules[$module]}"
+      #       if [ -n "$new_version" ]; then
+      #         new_tag="$module/$new_version"
 
-              echo "Creating new tag for $module: $new_tag"
-              git tag -s -a $new_tag -m "$module $new_tag"
-              git push origin $new_tag
-            fi
-          done
+      #         echo "Creating new tag for $module: $new_tag"
+      #         git tag -s -a $new_tag -m "$module $new_tag"
+      #         git push origin $new_tag
+      #       fi
+      #     done
 
       # - name: Create GitHub Release
       #   id: release_notes
