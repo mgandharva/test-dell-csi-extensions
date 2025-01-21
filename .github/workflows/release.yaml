@@ -156,12 +156,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull latest changes from main
-        if: env.changes_made == 'true'
         run: |
           git pull origin main
 
       - name: Create new tags for all modules
-        if: env.changes_made == 'true'
         run: |
           declare -A modules=( 
             ["volumeGroupSnapshot"]="${VOLUME_GROUP_SNAPSHOT_VERSION}" 
@@ -181,7 +179,6 @@ jobs:
           done
 
       - name: Create GitHub Release
-        if: env.changes_made == 'true'
         run: |
           release_name=""
           tag_name="volumeGroupSnapshot/v${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}"
