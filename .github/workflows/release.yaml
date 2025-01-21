@@ -10,6 +10,7 @@
 name: Release Dell-CSI-Extensions
 # Invocable as a reusable workflow
 # Can be manually triggered
+
 on:
   workflow_dispatch:
     inputs:
