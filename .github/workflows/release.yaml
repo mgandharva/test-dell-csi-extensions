@@ -96,36 +96,43 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
-      # - name: Update dependencies
-      #   id: update_dependencies
-      #   run: |
-      #     modules=("volumeGroupSnapshot" "replication" "migration")
-      #     common_version=$(eval echo \${common_new_version})
-      #     changes_made=false
-      #     for module in "${modules[@]}"; do
-      #       if [ "${{ inputs[module] }}" == 'true' ]; then
-      #         cd $module
-      #         go get github.com/dell/dell-csi-extensions/common@$common_version
-      #         go mod tidy
-      #         cd ..
-      #         if [[ -n $(git status --porcelain) ]]; then
-      #           git add $module/go.mod $module/go.sum
-      #           changes_made=true
-      #         fi
-      #       fi
-      #     done
-      #     if [ "$changes_made" = true ]; then
-      #       git commit -m "Update common dependency to $common_version"
-      #       echo "changes_made=true" >> $GITHUB_ENV
-      #     else
-      #       echo "changes_made=false" >> $GITHUB_ENV
-      #     fi
+      - name: Update dependencies
+        id: update_dependencies
+        run: |
+          modules=("volumeGroupSnapshot" "replication" "migration")
+          common_version="${{ inputs.common }}"
+          if [ -z "$common_version" ]; then
+            common_version=$(git tag -l "common/*" | sort -V | tail -n 1 | cut -d'/' -f2)
+            echo "Using latest common version: $common_version"
+          else
+            echo "Using provided common version: $common_version"
+          fi
 
-      # - uses: actions/create-github-app-token@v1.11.0
-      #   id: generate-token
-      #   with:
-      #     app-id: ${{ vars.CSM_RELEASE_APP_ID }}
-      #     private-key: ${{ secrets.CSM_RELEASE_APP_PRIVATE_KEY }}
+          changes_made=false
+          for module in "${modules[@]}"; do
+            if [ -n "${{ inputs[module] }}" ]; then
+              echo "Updating dependencies for module: $module"
+              cd $module
+              go get github.com/dell/dell-csi-extensions/common@$common_version
+              go mod tidy
+              cd ..
+              if [[ -n $(git status --porcelain) ]]; then
+                git add $module/go.mod $module/go.sum
+                changes_made=true
+              fi
+            fi
+          done
+          if [ "$changes_made" = true ]; then
+            git commit -m "Update common dependency to $common_version"
+            echo "changes_made=true" >> $GITHUB_ENV
+          else
+            echo "changes_made=false" >> $GITHUB_ENV
+          fi
+      - uses: actions/create-github-app-token@v1.11.0
+        id: generate-token
+        with:
+          app-id: ${{ vars.CSM_RELEASE_APP_ID }}
+          private-key: ${{ secrets.CSM_RELEASE_APP_PRIVATE_KEY }}
 
       # - name: Create pull request
       #   if: env.changes_made == 'true'
