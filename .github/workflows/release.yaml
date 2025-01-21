@@ -89,7 +89,8 @@ jobs:
 
           common_version=""
           if [ -z "${{ env.COMMON_VERSION }}" ]; then
-            common_version=$(git tag -l "common/*" | sort -V | tail -n 1 | cut -d'/' -f2)
+            common_branch=$(git branch --show-current)
+            common_version=$(git tag --merged "$common_branch"-l "common/*" | sort -V | tail -n 1 | cut -d'/' -f2)
             echo "Using latest common version: $common_version"
           else
             common_version="v${{ env.COMMON_VERSION }}"
