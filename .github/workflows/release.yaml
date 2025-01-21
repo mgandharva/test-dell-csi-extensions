@@ -120,76 +120,76 @@ jobs:
           app-id: ${{ vars.CSM_RELEASE_APP_ID }}
           private-key: ${{ secrets.CSM_RELEASE_APP_PRIVATE_KEY }}
 
-      # - name: Create pull request
-      #   if: env.changes_made == 'true'
-      #   uses: peter-evans/create-pull-request@v7
-      #   with:
-      #     token: ${{ steps.generate-token.outputs.token }}
-      #     branch: update-common-dependency
-      #     commit-message: "Update common dependency to ${{ env.common_new_version }}"
-      #     title: "Update common dependency to ${{ env.common_new_version }}"
-      #     body: "This PR updates the common dependency to ${{ env.common_new_version }}."
-      #     sign-commits: true
-      #     delete-branch: true
+      - name: Create pull request
+        if: env.changes_made == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          branch: update-common-dependency
+          commit-message: "Update common dependency to ${{ env.common_new_version }}"
+          title: "Update common dependency to ${{ env.common_new_version }}"
+          body: "This PR updates the common dependency to ${{ env.common_new_version }}."
+          sign-commits: true
+          delete-branch: true
 
-      # - name: Wait for PR to be merged
-      #   if: env.changes_made == 'true'
-      #   run: |
-      #     echo "Waiting for the PR to be merged. Please merge the PR manually."
-      #     while true; do
-      #       pr_status=$(gh pr view update-common-dependency --json state --jq '.state')
-      #       if [ "$pr_status" = "MERGED" ]; then
-      #         echo "PR has been merged."
-      #         break
-      #       fi
-      #       echo "PR not merged yet. Sleeping for 1 minute..."
-      #       sleep 60
-      #     done
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Wait for PR to be merged
+        if: env.changes_made == 'true'
+        run: |
+          echo "Waiting for the PR to be merged. Please merge the PR manually."
+          while true; do
+            pr_status=$(gh pr view update-common-dependency --json state --jq '.state')
+            if [ "$pr_status" = "MERGED" ]; then
+              echo "PR has been merged."
+              break
+            fi
+            echo "PR not merged yet. Sleeping for 1 minute..."
+            sleep 60
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Pull latest changes from main
-      #   if: env.changes_made == 'true'
-      #   run: |
-      #     git pull origin main
+      - name: Pull latest changes from main
+        if: env.changes_made == 'true'
+        run: |
+          git pull origin main
 
-      # - name: Create new tags for other modules
-      #   if: env.changes_made == 'true'
-      #   run: |
-      #     modules=("volumeGroupSnapshot" "replication" "migration" "podmon")
-      #     for module in "${modules[@]}"; do
-      #       if [ "${{ inputs[module] }}" ]; then
-      #         latest_release_tag=$(eval echo \${${module}_release_tag})
-      #         IFS='/' read -r _ version <<< "$latest_release_tag"
-      #         IFS='.' read -r major minor patch <<< "$version"
-      #         new_minor=$((minor + 1))
-      #         new_tag="$module/$major.$new_minor.0"
-      #         new_version="$major.$new_minor.0"
+      - name: Create new tags for other modules
+        if: env.changes_made == 'true'
+        run: |
+          modules=("volumeGroupSnapshot" "replication" "migration" "podmon")
+          for module in "${modules[@]}"; do
+            if [ "${{ inputs[module] }}" ]; then
+              latest_release_tag=$(eval echo \${${module}_release_tag})
+              IFS='/' read -r _ version <<< "$latest_release_tag"
+              IFS='.' read -r major minor patch <<< "$version"
+              new_minor=$((minor + 1))
+              new_tag="$module/$major.$new_minor.0"
+              new_version="$major.$new_minor.0"
               
-      #         echo "Creating new tag for $module: $new_tag"
-      #         echo "${module}_new_tag=$new_tag" >> $GITHUB_ENV
-      #         echo "${module}_new_version=$new_version" >> $GITHUB_ENV
+              echo "Creating new tag for $module: $new_tag"
+              echo "${module}_new_tag=$new_tag" >> $GITHUB_ENV
+              echo "${module}_new_version=$new_version" >> $GITHUB_ENV
               
-      #         git tag -s -a $new_tag -m "$module $new_tag"
-      #         git push origin $new_tag
-      #       fi
-      #     done
+              git tag -s -a $new_tag -m "$module $new_tag"
+              git push origin $new_tag
+            fi
+          done
 
-      # - name: Create GitHub Release
-      #   id: release_notes
-      #   if: inputs.volumeGroupSnapshot || inputs.replication || inputs.migration || inputs.common || inputs.podmon
-      #   uses: softprops/action-gh-release@v2
-      #   with:
-      #     tag_name: "v${{ env.volumeGroupSnapshot_new_version }}-volumeGroupSnapshot"
-      #     name: |
-      #       Release volumeGroupSnapshot ${{ env.volumeGroupSnapshot_new_version }},
-      #       Replication ${{ env.replication_new_version }}, 
-      #       Migration ${{ env.migration_new_version }},
-      #       Common ${{ env.common_new_version }}, 
-      #       Podmon ${{ env.podmon_new_version }}
-      #     generate_release_notes: true
-      #     draft: true
-      #     prerelease: false
-      #     make_latest: true
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release
+        id: release_notes
+        if: inputs.volumeGroupSnapshot || inputs.replication || inputs.migration || inputs.common || inputs.podmon
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ env.volumeGroupSnapshot_new_version }}-volumeGroupSnapshot"
+          name: |
+            Release volumeGroupSnapshot ${{ env.volumeGroupSnapshot_new_version }},
+            Replication ${{ env.replication_new_version }}, 
+            Migration ${{ env.migration_new_version }},
+            Common ${{ env.common_new_version }}, 
+            Podmon ${{ env.podmon_new_version }}
+          generate_release_notes: true
+          draft: true
+          prerelease: false
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
