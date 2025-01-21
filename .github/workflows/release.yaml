@@ -12,6 +12,7 @@ name: Release Dell-CSI-Extensions
 # Can be manually triggered
 
 on:
+  workflow_call:
   workflow_dispatch:
     inputs:
       volumeGroupSnapshot:
