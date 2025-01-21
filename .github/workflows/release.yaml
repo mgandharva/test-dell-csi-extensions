@@ -12,6 +12,7 @@ name: Release Dell-CSI-Extensions
 # Can be manually triggered
 on:
   workflow_call:
+  workflow_dispatch:
     inputs:
       volumeGroupSnapshot:
         description: 'Release volumeGroupSnapshot module'
@@ -28,7 +29,6 @@ on:
       podmon:
         description: 'Release podmon module'
         required: false
-  workflow_dispatch:
 
 jobs:
   release-modules:
