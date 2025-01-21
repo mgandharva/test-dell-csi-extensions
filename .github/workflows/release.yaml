@@ -87,7 +87,7 @@ jobs:
             ["migration"]="${{ env.MIGRATION_VERSION }}"
           )
 
-          common_version="${{ env.COMMON_VERSION }}"
+          common_version="v${{ env.COMMON_VERSION }}"
           if [ -z "$common_version" ]; then
             common_version=$(git tag -l "common/*" | sort -V | tail -n 1 | cut -d'/' -f2)
             echo "Using latest common version: $common_version"
@@ -102,7 +102,7 @@ jobs:
             if [ -n "$input_version" ]; then
               echo "Updating dependencies for module: $module"
               cd $module
-              go get github.com/dell/dell-csi-extensions/common@v$common_version
+              go get github.com/dell/dell-csi-extensions/common@$common_version
               go mod tidy
               cd ..
               if [[ -n $(git status --porcelain) ]]; then
@@ -185,19 +185,19 @@ jobs:
           tag_name="volumeGroupSnapshot/v${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}"
           
           if [ -n "${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}" ]; then
-            release_name="${release_name}Release volumeGroupSnapshot ${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}, "
+            release_name="${release_name}Release volumeGroupSnapshot v${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}, "
           fi
           if [ -n "${{ env.REPLICATION_VERSION }}" ]; then
-            release_name="${release_name}Replication ${{ env.REPLICATION_VERSION }}, "
+            release_name="${release_name}Replication v${{ env.REPLICATION_VERSION }}, "
           fi
           if [ -n "${{ env.MIGRATION_VERSION }}" ]; then
-            release_name="${release_name}Migration ${{ env.MIGRATION_VERSION }}, "
+            release_name="${release_name}Migration v${{ env.MIGRATION_VERSION }}, "
           fi
           if [ -n "${{ env.COMMON_VERSION }}" ]; then
-            release_name="${release_name}Common ${{ env.COMMON_VERSION }}, "
+            release_name="${release_name}Common v${{ env.COMMON_VERSION }}, "
           fi
           if [ -n "${{ env.PODMON_VERSION }}" ]; then
-            release_name="${release_name}Podmon ${{ env.PODMON_VERSION }}, "
+            release_name="${release_name}Podmon v${{ env.PODMON_VERSION }}, "
           fi
           
           release_name="${release_name%??}"  # Remove the trailing comma and space
