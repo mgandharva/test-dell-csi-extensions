@@ -153,27 +153,25 @@ jobs:
         run: |
           git pull origin main
 
-      # - name: Create new tags for other modules
-      #   if: env.changes_made == 'true'
-      #   run: |
-      #     modules=("volumeGroupSnapshot" "replication" "migration" "podmon")
-      #     for module in "${modules[@]}"; do
-      #       if [ "${{ inputs[module] }}" ]; then
-      #         latest_release_tag=$(eval echo \${${module}_release_tag})
-      #         IFS='/' read -r _ version <<< "$latest_release_tag"
-      #         IFS='.' read -r major minor patch <<< "$version"
-      #         new_minor=$((minor + 1))
-      #         new_tag="$module/$major.$new_minor.0"
-      #         new_version="$major.$new_minor.0"
-              
-      #         echo "Creating new tag for $module: $new_tag"
-      #         echo "${module}_new_tag=$new_tag" >> $GITHUB_ENV
-      #         echo "${module}_new_version=$new_version" >> $GITHUB_ENV
-              
-      #         git tag -s -a $new_tag -m "$module $new_tag"
-      #         git push origin $new_tag
-      #       fi
-      #     done
+      - name: Create new tags for all modules
+        if: env.changes_made == 'true'
+        run: |
+          declare -A modules=( 
+            ["volumeGroupSnapshot"]="${VOLUME_GROUP_SNAPSHOT_VERSION}" 
+            ["replication"]="${REPLICATION_VERSION}"
+            ["migration"]="${MIGRATION_VERSION}"
+            ["podmon"]="${PODMON_VERSION}"
+          )
+          for module in "${!modules[@]}"; do
+            new_version="${modules[$module]}"
+            if [ -n "$new_version" ]; then
+              new_tag="$module/$new_version"
+
+              echo "Creating new tag for $module: $new_tag"
+              git tag -s -a $new_tag -m "$module $new_tag"
+              git push origin $new_tag
+            fi
+          done
 
       # - name: Create GitHub Release
       #   id: release_notes
