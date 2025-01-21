@@ -178,36 +178,36 @@ jobs:
             fi
           done
 
- - name: Create GitHub Release
-  if: env.changes_made == 'true'
-  run: |
-    release_name=""
-    tag_name="volumeGroupSnapshot/v${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}"
-    
-    if [ -n "${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}" ]; then
-      release_name="${release_name}Release volumeGroupSnapshot ${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}, "
-    fi
-    if [ -n "${{ env.REPLICATION_VERSION }}" ]; then
-      release_name="${release_name}Replication ${{ env.REPLICATION_VERSION }}, "
-    fi
-    if [ -n "${{ env.MIGRATION_VERSION }}" ]; then
-      release_name="${release_name}Migration ${{ env.MIGRATION_VERSION }},
-    fi
-    if [ -n "${{ env.COMMON_VERSION }}" ]; then
-      release_name="${release_name}Common ${{ env.COMMON_VERSION }}, "
-    fi
-    if [ -n "${{ env.PODMON_VERSION }}" ]; then
-      release_name="${release_name}Podmon ${{ env.PODMON_VERSION }}, "
-    fi
-    
-    release_name="${release_name%??}"  # Remove the trailing comma and space
+      - name: Create GitHub Release
+        if: env.changes_made == 'true'
+        run: |
+          release_name=""
+          tag_name="volumeGroupSnapshot/v${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}"
+          
+          if [ -n "${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}" ]; then
+            release_name="${release_name}Release volumeGroupSnapshot ${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}, "
+          fi
+          if [ -n "${{ env.REPLICATION_VERSION }}" ]; then
+            release_name="${release_name}Replication ${{ env.REPLICATION_VERSION }}, "
+          fi
+          if [ -n "${{ env.MIGRATION_VERSION }}" ]; then
+            release_name="${release_name}Migration ${{ env.MIGRATION_VERSION }},
+          fi
+          if [ -n "${{ env.COMMON_VERSION }}" ]; then
+            release_name="${release_name}Common ${{ env.COMMON_VERSION }}, "
+          fi
+          if [ -n "${{ env.PODMON_VERSION }}" ]; then
+            release_name="${release_name}Podmon ${{ env.PODMON_VERSION }}, "
+          fi
+          
+          release_name="${release_name%??}"  # Remove the trailing comma and space
 
-    echo "Release notes: ${release_notes}"
-    echo "Release name: ${release_name}"
-    
-    tag_name="vgs"  # Replace with the actual tag name if needed
-    
-    echo "Creating GitHub release with tag name: $tag_name"
-    gh release create $tag_name --name "$release_name" --generate-release-notes=true --draft=true --prerelease=false --make-latest=true
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "Release notes: ${release_notes}"
+          echo "Release name: ${release_name}"
+          
+          tag_name="vgs"  # Replace with the actual tag name if needed
+          
+          echo "Creating GitHub release with tag name: $tag_name"
+          gh release create $tag_name --name "$release_name" --generate-release-notes=true --draft=true --prerelease=false --make-latest=true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
