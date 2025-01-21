@@ -205,9 +205,6 @@ jobs:
 
           echo "Release notes: ${release_notes}"
           echo "Release name: ${release_name}"
-          
-          tag_name="vgs"  # Replace with the actual tag name if needed
-          
           echo "Creating GitHub release with tag name: $tag_name"
           gh release create $tag_name --title "$release_name" --generate-notes --draft=true --prerelease=false --latest=true
         env:
