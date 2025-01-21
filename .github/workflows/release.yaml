@@ -93,10 +93,11 @@ jobs:
           changes_made=false
           for module in "${modules[@]}"; do
             input_version=$(eval echo \${${module^^}_VERSION})
+            echo "input_version=$input_version"
             if [ -n "$input_version" ]; then
               echo "Updating dependencies for module: $module"
               cd $module
-              go get github.com/dell/dell-csi-extensions/common@$common_version
+              go get github.com/dell/dell-csi-extensions/common@v$common_version
               go mod tidy
               cd ..
               if [[ -n $(git status --porcelain) ]]; then
