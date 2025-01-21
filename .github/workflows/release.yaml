@@ -54,15 +54,24 @@ jobs:
       - name: Fetch all tags
         run: git fetch --tags
 
+      - name: Set module input versions
+        id: set_module_inputs
+        run: |
+          echo "VOLUME_GROUP_SNAPSHOT_VERSION=${{ inputs.volumeGroupSnapshot }}" >> $GITHUB_ENV
+          echo "REPLICATION_VERSION=${{ inputs.replication }}" >> $GITHUB_ENV
+          echo "MIGRATION_VERSION=${{ inputs.migration }}" >> $GITHUB_ENV
+          echo "COMMON_VERSION=${{ inputs.common }}" >> $GITHUB_ENV
+          echo "PODMON_VERSION=${{ inputs.podmon }}" >> $GITHUB_ENV
+
       - name: Get latest release tags for selected modules
         id: get_latest_release_tags
         run: |
           declare -A modules=( 
-            ["volumeGroupSnapshot"]="${{ inputs.volumeGroupSnapshot }}" 
-            ["replication"]="${{ inputs.replication }}"
-            ["migration"]="${{ inputs.migration }}"
-            ["common"]="${{ inputs.common }}"
-            ["podmon"]="${{ inputs.podmon }}"
+            ["volumeGroupSnapshot"]="${VOLUME_GROUP_SNAPSHOT_VERSION}" 
+            ["replication"]="${REPLICATION_VERSION}"
+            ["migration"]="${MIGRATION_VERSION}"
+            ["common"]="${COMMON_VERSION}"
+            ["podmon"]="${PODMON_VERSION}"
           )
           echo "Modules: ${!modules[@]}"
           for module in "${!modules[@]}"; do
@@ -79,11 +88,11 @@ jobs:
           done
 
       - name: Create new tag for common module
-        if: ${{ inputs.common }}
+        if: ${{ env.COMMON_VERSION }}
         id: create_common_tag
         run: |
           module="common"
-          new_version="${{ inputs.common }}"
+          new_version="${{ env.COMMON_VERSION }}"
           new_tag="$module/$new_version"
           
           echo "Creating new tag for $module: $new_tag"
@@ -95,12 +104,12 @@ jobs:
           git push origin $new_tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Update dependencies
         id: update_dependencies
         run: |
-          modules='["volumeGroupSnapshot", "replication", "migration"]'
-          common_version="${{ inputs.common }}"
+          modules=("volumeGroupSnapshot" "replication" "migration")
+          common_version="${COMMON_VERSION}"
           if [ -z "$common_version" ]; then
             common_version=$(git tag -l "common/*" | sort -V | tail -n 1 | cut -d'/' -f2)
             echo "Using latest common version: $common_version"
@@ -109,8 +118,8 @@ jobs:
           fi
 
           changes_made=false
-          for module in $(echo $modules | jq -r '.[]'); do
-            input_version=$(eval echo \${{ inputs.${module} }})
+          for module in "${modules[@]}"; do
+            input_version=$(eval echo \${${module^^}_VERSION})
             if [ -n "$input_version" ]; then
               echo "Updating dependencies for module: $module"
               cd $module
