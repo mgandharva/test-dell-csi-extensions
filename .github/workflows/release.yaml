@@ -147,8 +147,8 @@ jobs:
               echo "PR has been merged."
               break
             fi
-            echo "PR not merged yet. Sleeping for 1 minute..."
-            sleep 20
+            echo "PR not merged yet. Sleeping for 10 seconds..."
+            sleep 10
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
