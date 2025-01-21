@@ -11,24 +11,8 @@ name: Release Dell-CSI-Extensions
 
 on:
   workflow_call:
-    inputs:
-      volumeGroupSnapshot:
-        description: 'Release volumeGroupSnapshot module'
-        required: false
-      replication:
-        description: 'Release replication module'
-        required: false
-      migration:
-        description: 'Release migration module'
-        required: false
-      common:
-        description: 'Release common module'
-        required: false
-      podmon:
-        description: 'Release podmon module'
-        required: false
   workflow_dispatch:
-  
+
 jobs:
   release-modules:
     runs-on: ubuntu-latest
