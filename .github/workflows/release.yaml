@@ -8,12 +8,9 @@
 # 7.All the steps are automated except the step 4.
 
 name: Release Dell-CSI-Extensions
-# Invocable as a reusable workflow
-# Can be manually triggered
 
 on:
   workflow_call:
-  workflow_dispatch:
     inputs:
       volumeGroupSnapshot:
         description: 'Release volumeGroupSnapshot module'
@@ -30,7 +27,8 @@ on:
       podmon:
         description: 'Release podmon module'
         required: false
-
+  workflow_dispatch:
+  
 jobs:
   release-modules:
     runs-on: ubuntu-latest
