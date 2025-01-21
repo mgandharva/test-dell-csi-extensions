@@ -148,7 +148,7 @@ jobs:
               break
             fi
             echo "PR not merged yet. Sleeping for 1 minute..."
-            sleep 60
+            sleep 20
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -191,7 +191,7 @@ jobs:
             release_name="${release_name}Replication ${{ env.REPLICATION_VERSION }}, "
           fi
           if [ -n "${{ env.MIGRATION_VERSION }}" ]; then
-            release_name="${release_name}Migration ${{ env.MIGRATION_VERSION }},
+            release_name="${release_name}Migration ${{ env.MIGRATION_VERSION }}, "
           fi
           if [ -n "${{ env.COMMON_VERSION }}" ]; then
             release_name="${release_name}Common ${{ env.COMMON_VERSION }}, "
