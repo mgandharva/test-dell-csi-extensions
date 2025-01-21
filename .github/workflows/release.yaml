@@ -13,20 +13,25 @@ on:
   workflow_dispatch:
     inputs:
       volumeGroupSnapshot:
-        description: 'Release volumeGroupSnapshot module'
+        description: 'Version for volumeGroupSnapshot module'
         required: false
+        type: string
       replication:
-        description: 'Release replication module'
+        description: 'Version for replication module'
         required: false
+        type: string
       migration:
-        description: 'Release migration module'
+        description: 'Version for migration module'
         required: false
+        type: string
       common:
-        description: 'Release common module'
+        description: 'Version for common module'
         required: false
+        type: string
       podmon:
-        description: 'Release podmon module'
+        description: 'Version for podmon module'
         required: false
+        type: string
   
 jobs:
   release-modules:
@@ -57,26 +62,28 @@ jobs:
             ["replication"]="${{ inputs.replication }}"
             ["migration"]="${{ inputs.migration }}"
             ["common"]="${{ inputs.common }}"
-            ["podmon"]="${{ inputs.ppodmon }}"
+            ["podmon"]="${{ inputs.podmon }}"
           )
           echo "Modules: ${!modules[@]}"
           for module in "${!modules[@]}"; do
-            if [ "${modules[$module]}" == 'true' ]; then
+            if [ -n "${modules[$module]}" ]; then
+              echo "Processing module: $module"
               latest_release_tag=$(git tag -l "$module/*" | sort -V | tail -n 1)
               echo "Latest release tag for $module: $latest_release_tag"
               echo "${module}_release_tag=$latest_release_tag" >> $GITHUB_ENV
               version=${latest_release_tag#*/}
               echo "${module}_version=$version" >> $GITHUB_ENV
+            else
+              echo "Skipping module: $module"
             fi
           done
 
       - name: Create new tag for common module
-        if: inputs.common
+        if: ${{ inputs.common }}
         id: create_common_tag
         run: |
           module="common"
-          new_version="${{ inputs.common_version }}"
-          echo "new version for $module: $new_version, tag$module/$new_version"
+          new_version="${{ inputs.common }}"
           new_tag="$module/$new_version"
           
           echo "Creating new tag for $module: $new_tag"
@@ -84,6 +91,7 @@ jobs:
           echo "${module}_new_version=$new_version" >> $GITHUB_ENV
           
           git tag -s -a $new_tag -m "$module $new_tag"
+          echo "Pushing the new tag $module/$new_version to the repository"
           git push origin $new_tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
