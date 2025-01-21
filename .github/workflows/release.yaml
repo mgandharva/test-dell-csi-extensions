@@ -87,11 +87,12 @@ jobs:
             ["migration"]="${{ env.MIGRATION_VERSION }}"
           )
 
-          common_version="v${{ env.COMMON_VERSION }}"
-          if [ -z "$common_version" ]; then
+          common_version=""
+          if [ -z "${{ env.COMMON_VERSION }}" ]; then
             common_version=$(git tag -l "common/*" | sort -V | tail -n 1 | cut -d'/' -f2)
             echo "Using latest common version: $common_version"
           else
+            common_version="v${{ env.COMMON_VERSION }}"
             echo "Using provided common version: $common_version"
           fi
 
