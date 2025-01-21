@@ -208,6 +208,6 @@ jobs:
     tag_name="vgs"  # Replace with the actual tag name if needed
     
     echo "Creating GitHub release with tag name: $tag_name"
-    gh release create $tag_name --name "$release_name" --generate-release-notes=true --draft=true --prerelease=true --make-latest=false
+    gh release create $tag_name --name "$release_name" --generate-release-notes=true --draft=true --prerelease=false --make-latest=true
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
