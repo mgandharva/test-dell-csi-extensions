@@ -51,7 +51,7 @@ jobs:
       - name: Fetch all tags
         run: git fetch --tags
 
-      - name: Get latest release tags for selected modules
+       name: Get latest release tags for selected modules
         id: get_latest_release_tags
         run: |
           declare -A modules=( 
@@ -61,6 +61,7 @@ jobs:
             ["common"]="${{ inputs.common }}"
             ["podmon"]="${{ inputs.ppodmon }}"
           )
+          echo "Modules: ${!modules[@]}"
           for module in "${!modules[@]}"; do
             if [ "${modules[$module]}" == 'true' ]; then
               latest_release_tag=$(git tag -l "$module/*" | sort -V | tail -n 1)
@@ -77,6 +78,7 @@ jobs:
         run: |
           module="common"
           new_version="${{ inputs.common_version }}"
+          echo "new version for $module: $new_version, tag$module/$new_version"
           new_tag="$module/$new_version"
           
           echo "Creating new tag for $module: $new_tag"
