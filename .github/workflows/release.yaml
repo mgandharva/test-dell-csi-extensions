@@ -65,7 +65,7 @@ jobs:
         id: create_common_tag
         run: |
           module="common"
-          new_version="${{ env.COMMON_VERSION }}"
+          new_version="v${{ env.COMMON_VERSION }}"
           new_tag="$module/$new_version"
           
           echo "Creating new tag for $module: $new_tag"
@@ -172,7 +172,7 @@ jobs:
           for module in "${!modules[@]}"; do
             new_version="${modules[$module]}"
             if [ -n "$new_version" ]; then
-              new_tag="$module/$new_version"
+              new_tag="$module/v$new_version"
 
               echo "Creating new tag for $module: $new_tag"
               git tag -s -a $new_tag -m "$module $new_tag"
