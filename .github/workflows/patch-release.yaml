@@ -45,6 +45,13 @@ jobs:
             exit 1
           fi
 
+          if [ -n "${{ github.event.inputs.common }}" ]; then
+            if [ -z "${{ github.event.inputs.replication }}" ] || [ -z "${{ github.event.inputs.migration }}" ]; then
+              echo "Error: If 'common' input is provided, both 'replication' and 'migration' must also be provided."
+              exit 1
+            fi
+          fi
+
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
         with:
