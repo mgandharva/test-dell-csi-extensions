@@ -12,7 +12,7 @@
 # 6.Create the GitHub release
 # 7.All the steps are automated except the step 4.
 
-name: Release Dell-CSI-Extensions
+name: Release Dell-CSI-Extensions Patch
 # Can be manually triggered
 on:
   workflow_dispatch:
