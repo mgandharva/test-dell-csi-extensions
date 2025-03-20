@@ -5,6 +5,8 @@ all: clean common replication podmon volumeGroupSnapshot migration
 ########################################################################
 
 # If GOPATH isn't defined then set its default location.
+
+
 ifeq (,$(strip $(GOPATH)))
 GOPATH := $(HOME)/go
 else

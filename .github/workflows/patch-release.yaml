@@ -12,10 +12,6 @@ name: Release Dell-CSI-Extensions Patch
 on:
   workflow_dispatch:
     inputs:
-      volumeGroupSnapshot:
-        description: 'Version for volumeGroupSnapshot module'
-        required: false
-        type: string
       replication:
         description: 'Version for replication module'
         required: false
@@ -54,7 +50,6 @@ jobs:
       - name: Set module input versions
         id: set_module_inputs
         run: |
-          echo "VOLUME_GROUP_SNAPSHOT_VERSION=${{ inputs.volumeGroupSnapshot }}" >> $GITHUB_ENV
           echo "REPLICATION_VERSION=${{ inputs.replication }}" >> $GITHUB_ENV
           echo "MIGRATION_VERSION=${{ inputs.migration }}" >> $GITHUB_ENV
           echo "COMMON_VERSION=${{ inputs.common }}" >> $GITHUB_ENV
@@ -82,7 +77,6 @@ jobs:
         id: update_dependencies
         run: |
           declare -A modules=( 
-            ["volumeGroupSnapshot"]="${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}",
             ["replication"]="${{ env.REPLICATION_VERSION }}",
             ["migration"]="${{ env.MIGRATION_VERSION }}"
           )
@@ -162,7 +156,6 @@ jobs:
       - name: Create new tags for all modules
         run: |
           declare -A modules=( 
-            ["volumeGroupSnapshot"]="${VOLUME_GROUP_SNAPSHOT_VERSION}" 
             ["replication"]="${REPLICATION_VERSION}"
             ["migration"]="${MIGRATION_VERSION}"
             ["podmon"]="${PODMON_VERSION}"
@@ -181,11 +174,7 @@ jobs:
       - name: Create GitHub Release
         run: |
           release_name=""
-          tag_name="volumeGroupSnapshot/v${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}"
-          
-          if [ -n "${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}" ]; then
-            release_name="${release_name}Release volumeGroupSnapshot v${{ env.VOLUME_GROUP_SNAPSHOT_VERSION }}, "
-          fi
+          tag_name="replication/v${{ env.REPLICATION_VERSION }}"
           if [ -n "${{ env.REPLICATION_VERSION }}" ]; then
             release_name="${release_name}Replication v${{ env.REPLICATION_VERSION }}, "
           fi
