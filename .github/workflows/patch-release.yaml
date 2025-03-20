@@ -28,7 +28,7 @@ on:
         description: 'Version for podmon module'
         required: false
         type: string
-  
+
 jobs:
   release-modules:
     runs-on: ubuntu-latest
@@ -37,6 +37,13 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Fetch all history for all tags
+
+      - name: Validate inputs
+        run: |
+          if [ -z "${{ github.event.inputs.replication }}" ] && [ -z "${{ github.event.inputs.migration }}" ] && [ -z "${{ github.event.inputs.common }}" ] && [ -z "${{ github.event.inputs.podmon }}" ]; then
+            echo "Error: At least one input must be provided."
+            exit 1
+          fi
 
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
