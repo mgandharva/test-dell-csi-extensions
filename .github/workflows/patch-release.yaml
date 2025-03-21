@@ -104,37 +104,35 @@ jobs:
             ["migration"]="${{ env.MIGRATION_VERSION }}"
           )
 
-          common_version=""
-          if [ -z "${{ env.COMMON_VERSION }}" ]; then
-             common_branch=$(git branch --show-current)
-             common_version=$(git tag --merged "$common_branch" -l "common/*" | sort -V | tail -n 1 | cut -d'/' -f2)
-             echo "Using latest common version: $common_version from branch: $common_branch"
-          else
+          if [ -n "${{ env.COMMON_VERSION }}" ]; then
             common_version="v${{ env.COMMON_VERSION }}"
             echo "Using provided common version: $common_version"
-          fi
 
-          changes_made=false
-          for module in "${!modules[@]}"; do
-            input_version="${modules[$module]}"
-            echo "$module input_version=$input_version"
-            if [ -n "$input_version" ]; then
-              echo "Updating dependencies for module: $module"
-              cd $module
-              go get github.com/dell/dell-csi-extensions/common@$common_version
-              go mod tidy
-              cd ..
-              if [[ -n $(git status --porcelain) ]]; then
-                git add $module/go.mod $module/go.sum
-                changes_made=true
+            changes_made=false
+            for module in "${!modules[@]}"; do
+              input_version="${modules[$module]}"
+              echo "$module input_version=$input_version"
+              if [ -n "$input_version" ]; then
+                echo "Updating dependencies for module: $module"
+                cd $module
+                go get github.com/dell/dell-csi-extensions/common@$common_version
+                go mod tidy
+                cd ..
+                if [[ -n $(git status --porcelain) ]]; then
+                  git add $module/go.mod $module/go.sum
+                  changes_made=true
+                fi
               fi
-            fi
-          done
+            done
 
-          if [ "$changes_made" = true ]; then
-            git commit -m "Update common dependency to $common_version"
-            echo "changes_made=true" >> $GITHUB_ENV
+            if [ "$changes_made" = true ]; then
+              git commit -m "Update common dependency to $common_version"
+              echo "changes_made=true" >> $GITHUB_ENV
+            else
+              echo "changes_made=false" >> $GITHUB_ENV
+            fi
           else
+            echo "COMMON_VERSION not provided. Skipping dependency update."
             echo "changes_made=false" >> $GITHUB_ENV
           fi
 
