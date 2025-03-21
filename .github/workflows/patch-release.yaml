@@ -17,14 +17,6 @@ name: Release Dell-CSI-Extensions Patch
 on:
   workflow_dispatch:
     inputs:
-      release_type:
-        description: 'Select the type of release'
-        required: true
-        type: choice
-        options:
-          - major
-          - minor
-          - patch
       replication:
         description: 'Version for replication module'
         required: false
