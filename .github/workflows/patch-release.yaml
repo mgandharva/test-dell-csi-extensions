@@ -38,10 +38,14 @@ jobs:
   release-modules:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Fetch all history for all tags
+       - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Fetch all history for all tags
+        ref: ${{ github.ref }} # Checkout the branch from which the workflow is triggered
+    - name: Log branch name
+      run: |
+        git branch
 
       - name: Validate inputs
         run: |
