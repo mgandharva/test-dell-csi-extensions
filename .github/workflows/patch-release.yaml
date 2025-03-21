@@ -97,42 +97,42 @@ jobs:
       - name: Update dependencies
         id: update_dependencies
         run: |
-              declare -A modules=( 
-                ["replication"]="${{ env.REPLICATION_VERSION }}",
-                ["migration"]="${{ env.MIGRATION_VERSION }}"
-              )
+          declare -A modules=( 
+            ["replication"]="${{ env.REPLICATION_VERSION }}",
+            ["migration"]="${{ env.MIGRATION_VERSION }}"
+          )
 
-              if [ -n "${{ env.COMMON_VERSION }}" ]; then
-                common_version="v${{ env.COMMON_VERSION }}"
-                echo "Using provided common version: $common_version"
+          if [ -n "${{ env.COMMON_VERSION }}" ]; then
+            common_version="v${{ env.COMMON_VERSION }}"
+            echo "Using provided common version: $common_version"
 
-                changes_made=false
-                for module in "${!modules[@]}"; do
-                  input_version="${modules[$module]}"
-                  echo "$module input_version=$input_version"
-                  if [ -n "$input_version" ]; then
-                    echo "Updating dependencies for module: $module"
-                    cd $module
-                    go get github.com/dell/dell-csi-extensions/common@$common_version
-                    go mod tidy
-                    cd ..
-                    if [[ -n $(git status --porcelain) ]]; then
-                      git add $module/go.mod $module/go.sum
-                      changes_made=true
-                    fi
-                  fi
-                done
-
-                if [ "$changes_made" = true ]; then
-                  git commit -m "Update common dependency to $common_version"
-                  echo "changes_made=true" >> $GITHUB_ENV
-                else
-                  echo "changes_made=false" >> $GITHUB_ENV
+            changes_made=false
+            for module in "${!modules[@]}"; do
+              input_version="${modules[$module]}"
+              echo "$module input_version=$input_version"
+              if [ -n "$input_version" ]; then
+                echo "Updating dependencies for module: $module"
+                cd $module
+                go get github.com/dell/dell-csi-extensions/common@$common_version
+                go mod tidy
+                cd ..
+                if [[ -n $(git status --porcelain) ]]; then
+                  git add $module/go.mod $module/go.sum
+                  changes_made=true
                 fi
-              else
-                echo "COMMON_VERSION not provided. Skipping dependency update."
-                echo "changes_made=false" >> $GITHUB_ENV
               fi
+            done
+
+            if [ "$changes_made" = true ]; then
+              git commit -m "Update common dependency to $common_version"
+              echo "changes_made=true" >> $GITHUB_ENV
+            else
+              echo "changes_made=false" >> $GITHUB_ENV
+            fi
+          else
+            echo "COMMON_VERSION not provided. Skipping dependency update."
+            echo "changes_made=false" >> $GITHUB_ENV
+          fi
 
       - uses: actions/create-github-app-token@v1.11.6
         id: generate-token
