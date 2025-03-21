@@ -25,10 +25,6 @@ on:
           - major
           - minor
           - patch
-      branch:
-        description: 'Select the branch to release from'
-        required: true
-        type: string
       replication:
         description: 'Version for replication module'
         required: false
@@ -47,24 +43,18 @@ on:
         type: string
 
 jobs:
-  fetch-branches:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Fetch branches
-      id: fetch_branches
-      run: |
-        branches=$(gh api repos/${{ github.repository }}/branches --jq '.[].name')
-        echo "branches=$branches" >> $GITHUB_ENV
-
   release-modules:
-    needs: fetch-branches
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         fetch-depth: 0 # Fetch all history for all tags
-        ref: ${{ github.event.inputs.branch }} # Checkout the selected branch
+        ref: ${{ github.ref }} # Checkout the branch from which the workflow is triggered
+    - name: Log branch name
+      run: |
+        git branch
+
     - name: Validate inputs
       run: |
         if [ -z "${{ github.event.inputs.replication }}" ] && [ -z "${{ github.event.inputs.migration }}" ] && [ -z "${{ github.event.inputs.common }}" ] && [ -z "${{ github.event.inputs.podmon }}" ]; then
